@@ -15,7 +15,8 @@ export default class Fox
         // Debug
         if(this.debug.active)
         {
-            this.debugFolder = this.debug.gui.addFolder('Fox')
+            this.debugFolder = this.debug.gui.addFolder('FOX')
+            this.debugFolder.close()
         }
 
         // Setup

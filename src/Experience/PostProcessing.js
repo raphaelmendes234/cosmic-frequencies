@@ -67,7 +67,8 @@ export default class PostProcessing
         this.effectComposer.addPass(this.unrealBloomPass)
 
         if (this.debug.active) {
-            this.debugFolder = this.debug.gui.addFolder("post processing")
+            this.debugFolder = this.debug.gui.addFolder("POST PROCESSING")
+            this.debugFolder.close()
             this.debugFolder.add(this.unrealBloomPass, "strength").min(0).max(2).step(0.001)
             this.debugFolder.add(this.unrealBloomPass, "radius").min(0).max(2).step(0.001)
             this.debugFolder.add(this.unrealBloomPass, "threshold").min(0).max(1).step(0.001)

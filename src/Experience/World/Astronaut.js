@@ -115,7 +115,8 @@ export default class Astronaut
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder("astronaut")
+        this.debugFolder = this.debug.gui.addFolder("ASTRONAUT")
+        this.debugFolder.close()
 
         this.debugFolder.add(this.materialParams, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
                 this.model.traverse((child) => {

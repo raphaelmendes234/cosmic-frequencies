@@ -175,7 +175,8 @@ export default class Objects
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder("wireframe objects")
+        this.debugFolder = this.debug.gui.addFolder("OBJECTS")
+        this.debugFolder.close()
         
         // Settings spécifiques
         const settingsFolder = this.debugFolder.addFolder("settings")

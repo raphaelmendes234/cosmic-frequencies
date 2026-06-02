@@ -49,7 +49,7 @@ export default class Camera
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder('camera')
+        this.debugFolder = this.debug.gui.addFolder('CAMERA')
         this.debugFolder.close()
         
         // Camera

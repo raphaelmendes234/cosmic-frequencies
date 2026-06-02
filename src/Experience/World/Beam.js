@@ -326,7 +326,8 @@ export default class Beam
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder("beams")
+        this.debugFolder = this.debug.gui.addFolder("BEAMS")
+        this.debugFolder.close()
         
         // group
         const groupFolder = this.debugFolder.addFolder("group")

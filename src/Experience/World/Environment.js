@@ -14,7 +14,8 @@ export default class Environment
         // Debug
         if(this.debug.active)
         {
-            this.debugFolder = this.debug.gui.addFolder('Environment')
+            this.debugFolder = this.debug.gui.addFolder('ENV')
+            this.debugFolder.close()
         }
 
         this.setSunlight()

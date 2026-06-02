@@ -68,7 +68,8 @@ export default class Helmet
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder("helmet")
+        this.debugFolder = this.debug.gui.addFolder("HELMET")
+        this.debugFolder.close()
 
         this.debugFolder.add(this.materialParams, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
                 this.model.traverse((child) => {

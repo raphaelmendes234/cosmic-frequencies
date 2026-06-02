@@ -14,7 +14,7 @@ export default class Manager
 
         if(this.debug.active)
         {
-            this.debugFolder = this.debug.gui.addFolder('manager')
+            this.debugFolder = this.debug.gui.addFolder('MANAGER')
             this.debugFolder.add(this, 'currentScene', { 'scene 1': 1, 'scene 2': 2, 'scene 3': 3 })
                             .name('Change scene')
                             .onChange(() => {

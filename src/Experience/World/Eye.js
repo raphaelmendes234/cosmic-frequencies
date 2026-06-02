@@ -70,7 +70,8 @@ export default class Eye
 
     setDebug()
     {
-        this.debugFolder = this.debug.gui.addFolder("eye")
+        this.debugFolder = this.debug.gui.addFolder("EYE")
+        this.debugFolder.close()
 
         this.debugFolder.add(this.materialParams, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
                 this.model.traverse((child) => {
