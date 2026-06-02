@@ -8,6 +8,7 @@ import Fox from './Fox'
 import Helmet from './Helmet'
 import Lights from './Lights'
 import Manager from './Manager'
+import Objects from './Objects'
 
 export default class World
 {
@@ -23,6 +24,7 @@ export default class World
             // Setup
             // this.helmet = new Helmet()
             this.beam = new Beam()
+            this.objects = new Objects()
             this.eye = new Eye()
             this.astronaut = new Astronaut()
             this.lights = new Lights()
@@ -53,6 +55,10 @@ export default class World
 
         if (this.beam) {
             this.beam.update()
+        }
+
+        if (this.objects) {
+            this.objects.update()
         }
     }
 }
