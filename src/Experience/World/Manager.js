@@ -31,7 +31,7 @@ export default class Manager
         const astronaut = this.world.astronaut
         const eye = this.world.eye
         const beam = this.world.beam
-        const objects = this.world.objects
+        const stars = this.world.stars
 
         // Point central pour l'OrbitControls
         const centerTarget = new THREE.Vector3(0, 0, 0)
@@ -46,7 +46,7 @@ export default class Manager
                 if(helmet) helmet.show()
                 if(eye) eye.hide()
                 if(beam) beam.setMode(1)
-                if(objects) objects.setMode(1)
+                if(stars) stars.setMode(1)
                 // Vue de face
                 this.camera.cutToShot(new THREE.Vector3(0, 0, 8), centerTarget)
                 break
@@ -59,7 +59,7 @@ export default class Manager
                 if(helmet) helmet.show()
                 if(eye) eye.hide()
                 if(beam) beam.setMode(2)
-                if(objects) objects.setMode(2)
+                if(stars) stars.setMode(2)
                 // Vue de 3/4 (on décale X et Z)
                 this.camera.cutToShot(new THREE.Vector3(-3.5, 0.6, 4.3), new THREE.Vector3(5.8, -0.7, -2))
                 break
@@ -69,7 +69,7 @@ export default class Manager
                 if(helmet) helmet.hide()
                 if(eye) eye.show()
                 if(beam) beam.setMode(3)
-                if(objects) objects.setMode(3)
+                if(stars) stars.setMode(3)
                 // Vue rapprochée pour l'oeil
                 this.camera.cutToShot(new THREE.Vector3(0, 0, 8), centerTarget)
                 break

@@ -276,6 +276,7 @@ export default class Beam
     {
         this.mesh = new THREE.InstancedMesh( this.geometry, this.material, this.p.maxCount )
         this.mesh.count = this.p.count
+        this.mesh.frustumCulled = false 
         this.group.add(this.mesh)
     }
 
