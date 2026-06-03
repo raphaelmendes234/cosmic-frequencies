@@ -20,6 +20,7 @@ export default class PostProcessing
         this.experience = new Experience()
         this.sizes = this.experience.sizes
         this.scene = this.experience.scene
+        this.time = this.experience.time
         this.camera = this.experience.camera.instance
         this.renderer = this.experience.renderer.instance
         this.debug = this.experience.debug
@@ -34,7 +35,7 @@ export default class PostProcessing
 
         // Passes
         this.setUnrealBloomPass()
-        this.setDisplacementPass()
+        this.setCRTPass()
 
         // Corrections passes
         this.setGammaCorrectionPass()
@@ -79,13 +80,15 @@ export default class PostProcessing
         }
     }
 
-    setDisplacementPass() {
+    setCRTPass() {
         const CRTPass = {
             uniforms: {
                 tDiffuse: { value: null },
                 uCurvature: { value: 4.2 },
                 uBorder: { value: 0.05 },
-                uAberration: { value: 0.0 }
+                uAberration: { value: 0.05 },
+                uGrain: { value: 0.0 },
+                uTime: { value: 0 } 
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -100,7 +103,19 @@ export default class PostProcessing
                 uniform float uCurvature;
                 uniform float uBorder;
                 uniform float uAberration;
+                uniform float uGrain;
+                uniform float uTime;
                 varying vec2 vUv;
+
+                float rand(vec2 co){
+                    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+                }
+
+                float hash12(vec2 p){
+                    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+                    p3 += dot(p3, p3.yzx + 33.33);
+                    return fract((p3.x + p3.y) * p3.z);
+                }
 
                 vec2 curve(vec2 uv){
                     uv = uv * 2.0 - 1.0;
@@ -118,6 +133,10 @@ export default class PostProcessing
                     float g = texture2D(tDiffuse, uv).g;
                     float b = texture2D(tDiffuse, uv + ca).b;
                     vec4 color = vec4(r, g, b, 1.0);
+
+                    // grain / static (animé, en espace écran)
+                    float noise = hash12(gl_FragCoord.xy + fract(uTime) * 100.0);
+                    color.rgb += (noise - 0.5) * uGrain;
 
                     // cadre noir arrondi (noircit aussi tout ce qui sort de l'écran courbé)
                     vec2 edge = smoothstep(0.0, uBorder, uv) * (1.0 - smoothstep(1.0 - uBorder, 1.0, uv));
@@ -137,6 +156,7 @@ export default class PostProcessing
             f.add(this.crtPass.material.uniforms.uCurvature, "value").min(2.5).max(10).step(0.1).name("courbure")
             f.add(this.crtPass.material.uniforms.uBorder, "value").min(0).max(0.3).step(0.005).name("bordure")
             f.add(this, "aberrationStrength").min(0).max(0.1).step(0.001).name("aberration")
+            f.add(this.crtPass.material.uniforms.uGrain, "value").min(0).max(10).step(0.005).name("grain")
         }
     }
 
@@ -161,6 +181,7 @@ export default class PostProcessing
 
     update() {
         this.crtPass.material.uniforms.uAberration.value = this.sound.kickHard * this.aberrationStrength
+        this.crtPass.material.uniforms.uTime.value = this.time.elapsed * 0.001
 
         this.effectComposer.render()
     }
