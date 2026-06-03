@@ -41,7 +41,7 @@ export default class Stars
         this.p.limit = 50.0 
 
         // Tailles
-        this.p.size = 6.7
+        this.p.size = 3.0
         this.p.sizeRange = 0.8 // 0 = toutes de la même taille, 1 = écart maximal
 
         // Vitesse (calquée sur tes rayons)
@@ -191,12 +191,15 @@ export default class Stars
         // On calque exactement la rotation du groupe sur les modes de Beam.js
         if (this.mode === 1) {
             this.group.rotation.set(0, Math.PI, 0)
+            this.p.size = 6.7
         } 
         else if (this.mode === 2) {
             this.group.rotation.set(Math.PI * 0.05, Math.PI + 0.5, 0)
+            this.p.size = 3
         } 
         else if (this.mode === 3) {
             this.group.rotation.set(-Math.PI * 0.5, 0, 0)
+            this.p.size = 3
         }
     }
     
