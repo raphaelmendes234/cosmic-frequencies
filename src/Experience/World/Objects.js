@@ -38,7 +38,7 @@ export default class Objects
     {
         this.p = {}
         // --- Paramètres spécifiques aux Objets ---
-        this.p.count = 50
+        this.p.count = 100
         this.p.baseSize = 0.5
         this.p.sizeRange = 1.0
         
@@ -55,8 +55,8 @@ export default class Objects
 
         // --- Paramètres de trajectoire (identiques à Beam.js) ---
         this.p.limit = 50.0
-        this.p.startDiameter = 0.1
-        this.p.endDiameter = 30.0
+        this.p.startDiameter = 30.0
+        this.p.endDiameter = 0.1
         this.p.curvature = -4.0
         this.p.waveAmplitude = 0.0
         this.p.waveFrequency = 0.15

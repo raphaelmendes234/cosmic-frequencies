@@ -9,6 +9,7 @@ export default class Beam
         this.scene = this.experience.scene
         this.time = this.experience.time
         this.debug = this.experience.debug
+        this.sound = this.experience.sound
 
         this.mode = 1
         
@@ -43,10 +44,10 @@ export default class Beam
         this.p.noiseStrength = 0.3
 
         this.p.waveAmplitude = 0.0   // hauteur/force de la déformation
-        this.p.waveFrequency = 0.15  // nb de vagues
+        this.p.waveFrequency = 0.0  // nb de vagues
         this.p.waveSpeed = 8.0
 
-        this.p.speed = 38.0
+        this.p.speed = 10.0
         this.p.speedRandomness = 1.0
 
         this.p.length = 10.0
@@ -62,6 +63,13 @@ export default class Beam
         }
         this.p.activeColorMode = 'fire'
         this.p.colorProgress = 1.0
+
+        /**
+         * Audio
+         */
+        this.p.audioThickness = 0.1
+        this.p.audioAmplitude = 10.0
+        this.p.audioFrequency = 1.0
     }
 
     setGeometry()
@@ -328,6 +336,12 @@ export default class Beam
     {
         this.debugFolder = this.debug.gui.addFolder("BEAMS")
         this.debugFolder.close()
+
+        // audio
+        const audioFolder = this.debugFolder.addFolder("audio reactivity")
+        audioFolder.add(this.p, "audioThickness").min(0).max(1).step(0.001)
+        audioFolder.add(this.p, "audioAmplitude").min(0).max(10).step(0.001)
+        audioFolder.add(this.p, "audioFrequency").min(0).max(10).step(0.001)
         
         // group
         const groupFolder = this.debugFolder.addFolder("group")
@@ -387,6 +401,8 @@ export default class Beam
     {
         const deltaTime = this.time.delta
 
+        const s = this.sound
+
         this.material.uniforms.uTime.value += deltaTime * 0.001
 
         this.material.uniforms.uLimit.value = this.p.limit
@@ -396,7 +412,7 @@ export default class Beam
         this.material.uniforms.uCurvature.value = this.p.curvature
         this.material.uniforms.uNoiseStrength.value = this.p.noiseStrength
 
-        this.material.uniforms.uWaveAmplitude.value = this.p.waveAmplitude
+        this.material.uniforms.uWaveAmplitude.value = Math.pow(s.volumeAverageSmooth, 3.0) * this.p.audioAmplitude
         this.material.uniforms.uWaveFrequency.value = this.p.waveFrequency
         this.material.uniforms.uWaveSpeed.value = this.p.waveSpeed
 
@@ -406,7 +422,7 @@ export default class Beam
         this.material.uniforms.uLength.value = this.p.length
         this.material.uniforms.uLengthRange.value = this.p.lengthRange
 
-        this.material.uniforms.uThickness.value = this.p.thickness
+        this.material.uniforms.uThickness.value = this.p.thickness + s.kickHard * this.p.audioThickness
         this.material.uniforms.uThicknessRange.value = this.p.thicknessRange
 
         // Gestion du Crossfade des couleurs

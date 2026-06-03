@@ -1,4 +1,5 @@
 import restart from 'vite-plugin-restart'
+import vjTracksPlugin from './vite-plugin-vj-tracks.js' 
 
 export default {
     root: 'src/', // Sources files (typically where index.html is)
@@ -16,6 +17,7 @@ export default {
     },
     plugins:
     [
-        restart({ restart: [ '../static/**', ] }) // Restart server on static file change
+        restart({ restart: [ '../static/**', ] }), // Restart server on static file change
+        vjTracksPlugin()
     ],
 }

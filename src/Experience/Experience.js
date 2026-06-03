@@ -8,6 +8,7 @@ import World from './World/World.js'
 import Debug from './Utils/Debug.js'
 import Ressources from './Utils/Ressources.js'
 import PostProcessing from './PostProcessing.js'
+import Sound from './Utils/Sound.js'
 
 import sources from './sources.js'
 
@@ -35,6 +36,7 @@ export default class Experience
         this.sizes = new Sizes()
         this.time = new Time()
         this.scene = new THREE.Scene()
+        this.sound = new Sound()      
         this.ressources = new Ressources(sources)
         this.camera = new Camera()
         this.renderer = new Renderer()

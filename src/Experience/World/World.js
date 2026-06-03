@@ -24,7 +24,7 @@ export default class World
             // Setup
             // this.helmet = new Helmet()
             this.beam = new Beam()
-            this.objects = new Objects()
+            // this.objects = new Objects()
             this.eye = new Eye()
             this.astronaut = new Astronaut()
             this.lights = new Lights()
