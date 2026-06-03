@@ -179,9 +179,12 @@ export default class Astronaut
     {
         if (this.model && this.model.visible) {
             this.cubeCamera.position.copy(this.model.position)
-            this.cubeCamera.position.y += 5 
-            if (this.mode === 2) {
-                this.cubeCamera.position.x -= 1 
+            if (this.mode === 1) {
+                this.cubeCamera.position.y += 6 
+            } else if (this.mode === 2) {
+                this.cubeCamera.position.y += 12 
+                this.cubeCamera.position.x += 2
+                this.cubeCamera.position.z -= 2 
             }
             this.model.visible = false
             this.cubeCamera.update(this.renderer.instance, this.scene)
