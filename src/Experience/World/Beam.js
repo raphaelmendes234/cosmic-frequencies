@@ -43,38 +43,55 @@ export default class Beam
         this.p.curvature = -4.0
         this.p.noiseStrength = 0.3
 
-        this.p.waveAmplitude = 0.0   // hauteur/force de la déformation
+        this.p.waveAmplitude = 0.1   // hauteur/force de la déformation
         this.p.waveFrequency = 0.0  // nb de vagues
         this.p.waveSpeed = 8.0
 
-        this.p.speed = 10.0
+        this.p.speed = 30.0
         this.p.speedRandomness = 1.0
 
-        this.p.length = 10.0
+        this.p.length = 0.0
         this.p.lengthRange = 1.0
 
         this.p.thickness = 0.01
         this.p.thicknessRange = 0.05
 
         this.p.palettes = {
-            fire: [new THREE.Color('#ff0000'), new THREE.Color('#ff7f00'), new THREE.Color('#ffff00')],
-            ice: [new THREE.Color('#0055ff'), new THREE.Color('#00ffff'), new THREE.Color('#ffffff')],
-            nature: [new THREE.Color('#00ff00'), new THREE.Color('#228b22'), new THREE.Color('#adff2f')]
+            nebula:    [new THREE.Color('#3a0ca3'), new THREE.Color('#b5179e'), new THREE.Color('#f72585')], // violet → magenta → rose
+            aurora:    [new THREE.Color('#06d6a0'), new THREE.Color('#1b9aaa'), new THREE.Color('#a7f3d0')], // teal → cyan → menthe
+            supernova: [new THREE.Color('#ff6d00'), new THREE.Color('#ffaa00'), new THREE.Color('#ffe169')], // orange → ambre → or
+            cosmos:    [new THREE.Color('#5e60ce'), new THREE.Color('#7400b8'), new THREE.Color('#b8c0ff')], // indigo → violet → lavande
+            mars:      [new THREE.Color('#9b2226'), new THREE.Color('#ca6702'), new THREE.Color('#ee9b00')], // rouille → orange brûlé → sable
+            stardust:  [new THREE.Color('#ff70a6'), new THREE.Color('#9d4edd'), new THREE.Color('#48bfe3')]  // rose → pourpre → bleu
         }
-        this.p.activeColorMode = 'fire'
+        this.p.activeColorMode = 'nebula'
         this.p.colorProgress = 1.0
 
         /**
          * Audio
          */
+        this.p.audioLength = 50.0
         this.p.audioThickness = 0.1
-        this.p.audioAmplitude = 10.0
+        this.p.audioAmplitude = 2.0
         this.p.audioFrequency = 1.0
+        
+        this.p.audioFreqThreshold = 0.9   // seuil de déclenchement
+        this.p.audioFreqStrength = 2              // force du coup sur la fréquence
+        this.freqPulse = 0
+        this.freqWasAbove = false
+    
+        this.p.audioAlignment = 0.5
+
+        this.p.colorCooldown = 0.4   // délai min entre 2 changements (secondes)
+        this.colorTimer = 0
+        this.paletteNames = Object.keys(this.p.palettes)
+        this.paletteIndex = 0
     }
 
     setGeometry()
     {
         this.geometry = new THREE.CylinderGeometry(1, 1, 3, 16, 40)
+        this.geometry.translate(0, 1.5, 0)  
 
         const offsets = new Float32Array(this.p.maxCount * 3)
         const randoms = new Float32Array(this.p.maxCount * 3)
@@ -129,8 +146,8 @@ export default class Beam
                 uLengthRange: { value: this.p.lengthRange},
                 uThickness: { value: this.p.thickness},
                 uThicknessRange: { value: this.p.thicknessRange},
-                uPalette1: { value: this.p.palettes.fire },
-                uPalette2: { value: this.p.palettes.fire },
+                uPalette1: { value: this.p.palettes.nebula },
+                uPalette2: { value: this.p.palettes.nebula },
                 uColorProgress: { value: this.p.colorProgress },
             },
             vertexShader: `
@@ -274,17 +291,15 @@ export default class Beam
             this.p.startDiameter = 30.0
             this.p.endDiameter = 0.1
             this.p.curvature = -4.0
-            this.changeColorMode("fire")
         } 
         else if (this.mode === 2) {
             // group rota
-            this.group.rotation.set(0, Math.PI, 0)
+            this.group.rotation.set(Math.PI * 0.05, Math.PI, 0)
 
             // beams params
             this.p.startDiameter = 10.0
             this.p.endDiameter = 30.0
             this.p.curvature = -4.0
-            this.changeColorMode("ice")
         } 
         else if (this.mode === 3) {
             // group rota
@@ -294,7 +309,6 @@ export default class Beam
             this.p.startDiameter = 20.0
             this.p.endDiameter = 20.0
             this.p.curvature = 0.0
-            this.changeColorMode("nature")
         }
 
         // refresh debug
@@ -338,53 +352,56 @@ export default class Beam
         this.debugFolder.close()
 
         // audio
-        const audioFolder = this.debugFolder.addFolder("audio reactivity")
+        const audioFolder = this.debugFolder.addFolder("audio reactivity").close()
+        audioFolder.add(this.p, "audioLength").min(0).max(100).step(0.001)
         audioFolder.add(this.p, "audioThickness").min(0).max(1).step(0.001)
         audioFolder.add(this.p, "audioAmplitude").min(0).max(10).step(0.001)
-        audioFolder.add(this.p, "audioFrequency").min(0).max(10).step(0.001)
+        audioFolder.add(this.p, "audioFreqThreshold").min(0).max(1).step(0.001)
+        audioFolder.add(this.p, "audioFreqStrength").min(0).max(100).step(0.001)
+        audioFolder.add(this.p, "audioAlignment").min(0).max(10).step(0.001)
         
         // group
-        const groupFolder = this.debugFolder.addFolder("group")
+        const groupFolder = this.debugFolder.addFolder("group").close()
         groupFolder.add(this.group.rotation, 'x').min(-Math.PI).max(Math.PI).step(0.01).name('rotation X')
         groupFolder.add(this.group.rotation, 'y').min(-Math.PI).max(Math.PI).step(0.01).name('rotation Y')
         groupFolder.add(this.group.rotation, 'z').min(-Math.PI).max(Math.PI).step(0.01).name('rotation Z')
         
         // beams controls
-        const globalFolder = this.debugFolder.addFolder("global")
+        const globalFolder = this.debugFolder.addFolder("global").close()
         globalFolder.add(this.p, "count").min(0).max(this.p.maxCount).step(1).name("count").onChange((value) => { this.mesh.count = value })
         globalFolder.add(this.p, "limit").min(0).max(40).step(0.01).name("zone z").onChange(() => { this.updateOffsets() })
 
         // speed
-        const speedFolder = this.debugFolder.addFolder("speed")
+        const speedFolder = this.debugFolder.addFolder("speed").close()
         speedFolder.add(this.p, "speed").min(0).max(100).step(0.01).name("speed")
         speedFolder.add(this.p, "speedRandomness").min(0).max(1).step(0.01).name("speed gap")
 
         // length
-        const lengthFolder = this.debugFolder.addFolder("length")
+        const lengthFolder = this.debugFolder.addFolder("length").close()
         lengthFolder.add(this.p, "length").min(0).max(50).step(0.01).name("length")
         lengthFolder.add(this.p, "lengthRange").min(0).max(1).step(0.01)
 
         // thickness
-        const thicknessFolder = this.debugFolder.addFolder("thickness")
+        const thicknessFolder = this.debugFolder.addFolder("thickness").close()
         thicknessFolder.add(this.p, "thickness").min(0).max(0.2).step(0.001).name("thickness")
         thicknessFolder.add(this.p, "thicknessRange").min(0).max(1).step(0.01)
 
         // forme du tube
-        const tubeFolder = this.debugFolder.addFolder("tube form")
+        const tubeFolder = this.debugFolder.addFolder("tube form").close()
         tubeFolder.add(this.p, "startDiameter").min(0.1).max(100).step(0.1).name("start diameter (z-)")
         tubeFolder.add(this.p, "endDiameter").min(0.1).max(100).step(0.1).name("end diameter (z+)")
         tubeFolder.add(this.p, "curvature").min(-15).max(15).step(0.1).name("curve (- in / + out)")
         tubeFolder.add(this.p, "noiseStrength").min(0).max(5).step(0.01).name("alignment noise")
 
         // deformation
-        const waveFolder = this.debugFolder.addFolder("sinus deform")
+        const waveFolder = this.debugFolder.addFolder("sinus deform").close()
         waveFolder.add(this.p, "waveAmplitude").min(0).max(10).step(0.05).name("amplitude")
         waveFolder.add(this.p, "waveFrequency").min(0).max(10).step(0.01).name("frequence")
         waveFolder.add(this.p, "waveSpeed").min(-30).max(30).step(0.1).name("wave speed")
         
         // couleurs
-        const colorFolder = this.debugFolder.addFolder("sinus deform")
-        colorFolder.add(this.p, 'activeColorMode', ['fire', 'ice', 'nature']).name('color ambiance').onChange((newMode) => { this.changeColorMode(newMode) })
+        const colorFolder = this.debugFolder.addFolder("colors").close()
+        colorFolder.add(this.p, 'activeColorMode', this.paletteNames).name('color ambiance').onChange((newMode) => { this.changeColorMode(newMode) })
     }
 
     refreshGuiDisplay(folder)
@@ -410,22 +427,39 @@ export default class Beam
         this.material.uniforms.uStartDiameter.value = this.p.startDiameter
         this.material.uniforms.uEndDiameter.value = this.p.endDiameter
         this.material.uniforms.uCurvature.value = this.p.curvature
-        this.material.uniforms.uNoiseStrength.value = this.p.noiseStrength
 
+        // this.material.uniforms.uWaveAmplitude.value = this.p.waveAmplitude
         this.material.uniforms.uWaveAmplitude.value = Math.pow(s.volumeAverageSmooth, 3.0) * this.p.audioAmplitude
-        this.material.uniforms.uWaveFrequency.value = this.p.waveFrequency
+
+        // this.material.uniforms.uWaveFrequency.value = this.p.waveFrequency
+        const above = s.volume > this.p.audioFreqThreshold // déclenche un coup seulement quand on franchit le seuil vers le haut
+        if (above && !this.freqWasAbove) this.freqPulse = 1.0
+        this.freqWasAbove = above
+        this.freqPulse *= 0.9 // le coup retombe
+        this.material.uniforms.uWaveFrequency.value = this.p.waveFrequency + this.freqPulse * this.p.audioFreqStrength
+        this.material.uniforms.uNoiseStrength.value = this.p.noiseStrength + this.freqPulse * this.p.audioAlignment
+
+
         this.material.uniforms.uWaveSpeed.value = this.p.waveSpeed
 
         this.material.uniforms.uSpeed.value = this.p.speed
         this.material.uniforms.uSpeedRandomness.value = this.p.speedRandomness
 
-        this.material.uniforms.uLength.value = this.p.length
+        // this.material.uniforms.uLength.value = this.p.length
+        this.material.uniforms.uLength.value = 0 + Math.pow(s.volumeAverageSmooth, 2.0) * this.p.audioLength
         this.material.uniforms.uLengthRange.value = this.p.lengthRange
 
         this.material.uniforms.uThickness.value = this.p.thickness + s.kickHard * this.p.audioThickness
         this.material.uniforms.uThicknessRange.value = this.p.thicknessRange
 
-        // Gestion du Crossfade des couleurs
+        // déclenche le changement de palette sur kickHard (avec cooldown)
+        this.colorTimer += deltaTime * 0.002
+        if (s.kickHard > 0.5 && this.colorTimer >= this.p.colorCooldown) {
+            this.paletteIndex = (this.paletteIndex + 1) % this.paletteNames.length
+            this.changeColorMode(this.paletteNames[this.paletteIndex])
+            this.colorTimer = 0
+        }
+        // gestion du Crossfade des couleurs
         if (this.p.colorProgress < 1.0) {
             this.p.colorProgress += deltaTime * 0.002 
             if (this.p.colorProgress > 1.0) {
