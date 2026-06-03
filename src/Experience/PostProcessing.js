@@ -85,11 +85,24 @@ export default class PostProcessing
         if (this.renderer.getPixelRatio() === 1 && !this.renderer.capabilities.isWebGL2) {
             this.smaaPass = new SMAAPass()
             this.effectComposer.addPass(this.smaaPass)
-            console.lpog("Using SMAA")
+            console.log("Using SMAA")
         }
+    }
+
+    resize() {
+        this.effectComposer.setSize(this.sizes.width, this.sizes.height)
+        this.effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     }
 
     update() {
         this.effectComposer.render()
+    }
+
+    dispose() {
+        this.effectComposer.dispose()
+        this.unrealBloomPass.dispose()
+        if (this.smaaPass) {
+            this.smaaPass.dispose()
+        }
     }
 }

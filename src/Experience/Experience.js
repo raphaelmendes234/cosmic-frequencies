@@ -58,7 +58,8 @@ export default class Experience
     {
         this.camera.resize()
         this.renderer.resize()
-        this.world.objects.resize()
+        // this.world.objects.resize()
+        this.postProcessing.resize()
     }
 
     update()
@@ -106,7 +107,7 @@ export default class Experience
         this.renderer.instance.dispose()
 
         // Post-processing
-        // if using post-processing, need to dispose EffectComposer, its WebGLRenderTarget and used passes
+        this.postProcessing.dispose()
 
         // Lil-gui
         if (this.debug.active) 
