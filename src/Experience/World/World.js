@@ -59,5 +59,9 @@ export default class World
         if (this.stars) {
             this.stars.update()
         }
+
+        if (this.manager) {
+            this.manager.update()
+        }
     }
 }
