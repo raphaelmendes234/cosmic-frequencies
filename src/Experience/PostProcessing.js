@@ -26,8 +26,8 @@ export default class PostProcessing
         this.debug = this.experience.debug
         this.sound = this.experience.sound
 
+        // CRT pass
         this.aberrationStrength = 0.05
-
         this.transition = 1             // 1 = écran fermé (on démarre coupé pendant le chargement)
         this.phase = 'closed'           // état courant de l'animation
         this.t = 0                      // durée d'une coupure complète, en secondes
@@ -38,6 +38,16 @@ export default class PostProcessing
         // ouvre l'écran quand les assets sont chargés
         this.experience.ressources.on('loaded', () => { this.phase = 'opening'; this.t = 0 })
 
+        // Black and white pass
+        this.bw = 0
+        this.bwTimer = 0
+        this.bwHold = 0             // temps restant d'affichage du N&B
+        this.bwDuration = 0.6       // durée du flash (s)
+        this.bwBaseInterval = 4     // intervalle quand le son est faible (s)
+        this.bwAmount = 40          // accélération selon le volume (monter pour faire clignoter les passages forts)
+
+        this.contrast = 1.1
+
         // Set up
         this.setRenderTarget()
         this.setEffectComposer()
@@ -46,6 +56,7 @@ export default class PostProcessing
         // Passes
         this.setUnrealBloomPass()
         this.setCRTPass()
+        this.setBlackWhitePass()
 
         // Corrections passes
         this.setGammaCorrectionPass()
@@ -197,6 +208,39 @@ export default class PostProcessing
         }
     }
 
+    setBlackWhitePass() {
+        const BlackWhitePass = {
+            uniforms: {
+                tDiffuse: { value: null },
+                uBW: { value: 0 },      // 0 = normal, 1 = noir & blanc
+                uContrast: { value: this.contrast }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main(){
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform float uBW;
+                uniform float uContrast;
+                varying vec2 vUv;
+                void main(){
+                    vec4 c = texture2D(tDiffuse, vUv);
+                    float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));         // luminance
+                    gray = clamp((gray - 0.5) * uContrast + 0.5, 0.0, 1.0);     // punch : écarte du gris moyen
+                    c.rgb = mix(c.rgb, vec3(gray), uBW);
+                    gl_FragColor = c;
+                }
+            `,
+        }
+        this.bwPass = new ShaderPass(BlackWhitePass)
+        this.bwPass.enabled = true
+        this.effectComposer.addPass(this.bwPass)
+    }
+
     setGammaCorrectionPass() {
         this.gammaCorrectionPass = new ShaderPass(GammaCorrectionShader)
         this.gammaCorrectionPass.enabled = true
@@ -219,6 +263,9 @@ export default class PostProcessing
     update() {
         const dt = this.time.delta * 0.001
 
+        /**
+         * CRT pass
+         */
         if (this.phase === 'closed') {
             this.transition = 1                                 // reste fermé tant que ça charge
         } else if (this.phase === 'opening') {                  // chargement terminé : ouverture 1 → 0
@@ -235,10 +282,28 @@ export default class PostProcessing
         } else {
             this.transition = 0                                 // idle : écran normal
         }
-
         this.crtPass.material.uniforms.uTransition.value = this.transition
         this.crtPass.material.uniforms.uAberration.value = this.sound.kickHard * this.aberrationStrength
         this.crtPass.material.uniforms.uTime.value = this.time.elapsed * 0.001
+
+        /**
+         *  black and white
+         */
+        const boost = Math.pow(this.sound.volumeAverageSmooth, 2.0) * this.bwAmount
+        const bwInterval = Math.max(this.bwBaseInterval / (1 + boost), 0.1)
+
+        if (this.bwHold > 0) {
+            this.bwHold -= dt
+            this.bw = this.bwHold > 0 ? 1 : 0
+        } else {
+            this.bwTimer += dt
+            if (this.bwTimer >= bwInterval) {
+                this.bwHold = Math.max(this.bwDuration / (1 + boost), 0.1)   // jamais sous 0.1s
+                this.bwTimer = 0
+            }
+        }
+
+        this.bwPass.material.uniforms.uBW.value = this.bw
 
         this.effectComposer.render()
     }
