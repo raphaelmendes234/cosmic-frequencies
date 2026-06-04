@@ -38,7 +38,7 @@ export default class Astronaut
         // Créer la cible de rendu cubique (résolution de 256 ou 512 est souvent suffisante)
         this.cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
             generateMipmaps: true,
-            minFilter: THREE.LinearMipmapLinearFilter
+            minFilter: THREE.LinearFilter
         })
 
         // Créer la CubeCamera (near, far, renderTarget)
@@ -186,9 +186,12 @@ export default class Astronaut
                 this.cubeCamera.position.x += 2
                 this.cubeCamera.position.z -= 2 
             }
-            this.model.visible = false
-            this.cubeCamera.update(this.renderer.instance, this.scene)
-            this.model.visible = true
+            this.cubeFrame = (this.cubeFrame || 0) + 1
+            if (this.cubeFrame % 4 === 0) {          // refresh reflection 1 frame in 4
+                this.model.visible = false
+                this.cubeCamera.update(this.renderer.instance, this.scene)
+                this.model.visible = true
+            }
 
             this.animation.mixer.update(this.time.delta * 0.001)
         }
