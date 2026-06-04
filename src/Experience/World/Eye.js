@@ -12,14 +12,22 @@ export default class Eye
         this.time = this.experience.time
         this.debug = this.experience.debug
         this.renderer = this.experience.renderer
+        this.sound = this.experience.sound
 
         // Setup
-        this.ressource = this.ressources.items.anatomicalEyeball
+        this.ressource = this.ressources.items.eyeModel
 
         this.materialParams = {
-            envMapIntensity: 4.0,
-            roughness: 0.1,
-            metalness: 0.75,
+            face: {
+                envMapIntensity: 0.8,
+                roughness: 0.18,
+                metalness: 1.0,
+            }, 
+            eye: {
+                envMapIntensity: 4.0,
+                roughness: 0.1,
+                metalness: 0.75,
+            }
         }
 
         this.setCubeCamera()
@@ -45,15 +53,23 @@ export default class Eye
             if(child instanceof THREE.Mesh)
             {
                 child.castShadow = true
-
-                this.visiereMesh = child;
-    
                 const mat = child.material;
-                mat.envMap = this.cubeRenderTarget.texture;
-                mat.envMapIntensity = this.materialParams.envMapIntensity
-                mat.roughness = this.materialParams.roughness
-                mat.metalness = this.materialParams.metalness
-    
+
+                if (child.name === "Face") {
+                    this.faceMesh = child
+                    mat.envMap = this.cubeRenderTarget.texture;
+                    mat.envMapIntensity = this.materialParams.face.envMapIntensity
+                    mat.roughness = this.materialParams.face.roughness
+                    mat.metalness = this.materialParams.face.metalness
+                } 
+                if (child.name === "Eye") {
+                    this.eyeMesh = child
+                    mat.envMap = this.cubeRenderTarget.texture;
+                    mat.envMapIntensity = this.materialParams.eye.envMapIntensity
+                    mat.roughness = this.materialParams.eye.roughness
+                    mat.metalness = this.materialParams.eye.metalness
+                }
+
                 mat.needsUpdate = true;
         }
         })
@@ -78,7 +94,7 @@ export default class Eye
         this.animation.mixer = new THREE.AnimationMixer(this.model)
 
         this.animation.actions = {}
-        
+        console.log(this.ressource.animations)
         this.animation.actions.idle = this.animation.mixer.clipAction(this.ressource.animations[0])
 
         this.animation.actions.current = this.animation.actions.idle
@@ -90,31 +106,32 @@ export default class Eye
         this.debugFolder = this.debug.gui.addFolder("EYE")
         this.debugFolder.close()
 
-        this.debugFolder.add(this.materialParams, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
-                this.model.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        child.material.envMapIntensity = value
-                        child.material.needsUpdate = true
-                    }
-                })
-            })
+        const eyeFolder = this.debugFolder.addFolder("eyeball")
+        eyeFolder.add(this.materialParams.eye, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
+            this.eyeMesh.material.envMapIntensity = value
+            this.eyeMesh.material.needsUpdate = true
+        })
+        eyeFolder.add(this.materialParams.eye, "roughness").min(0).max(1).step(0.01).onChange((value) => {
+            this.eyeMesh.material.roughness = value
+            this.eyeMesh.material.needsUpdate = true
+        })
+        eyeFolder.add(this.materialParams.eye, "metalness").min(0).max(1).step(0.01).onChange((value) => {
+            this.eyeMesh.material.metalness = value
+            this.eyeMesh.material.needsUpdate = true
+        })
 
-        this.debugFolder.add(this.materialParams, "roughness").min(0).max(1).step(0.01).onChange((value) => {
-                this.model.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        child.material.roughness = value
-                        child.material.needsUpdate = true
-                    }
-                })
-            })
-
-        this.debugFolder.add(this.materialParams, "metalness").min(0).max(1).step(0.01).onChange((value) => {
-                this.model.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        child.material.metalness = value
-                        child.material.needsUpdate = true
-                    }
-                })
+        const faceFolder = this.debugFolder.addFolder("face")
+        faceFolder.add(this.materialParams.face, "envMapIntensity").min(0).max(5).step(0.01).onChange((value) => {
+            this.faceMesh.material.envMapIntensity = value
+            this.faceMesh.material.needsUpdate = true
+        })
+        faceFolder.add(this.materialParams.face, "roughness").min(0).max(1).step(0.01).onChange((value) => {
+            this.faceMesh.material.roughness = value
+            this.faceMesh.material.needsUpdate = true
+        })
+        faceFolder.add(this.materialParams.face, "metalness").min(0).max(1).step(0.01).onChange((value) => {
+            this.faceMesh.material.metalness = value
+            this.faceMesh.material.needsUpdate = true
             })
     }
 
@@ -139,7 +156,7 @@ export default class Eye
                 this.model.visible = true
             }
 
-            this.animation.mixer.update(this.time.delta * 0.001)
+            this.animation.mixer.update(this.time.delta * 0.001 * Math.min(Math.pow(this.sound.volumeAverageSmooth, 3.0) * 25, 2))
         }
     }
 }

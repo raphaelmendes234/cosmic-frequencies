@@ -32,7 +32,7 @@ export default [
         path: 'models/DamagedHelmet/glTF/DamagedHelmet.gltf'
     },
     {
-        name: 'anatomicalEyeball',
+        name: 'eyeModel',
         type: 'gltfModel',
         path: 'models/Eye/eyeDRACO.glb'
     },
