@@ -20,13 +20,15 @@ export default class SpaceSky
     setParameters()
     {
         this.p = {
-            scale: 1.5,        // fréquence du bruit (plus grand = nuages plus petits)
+            scale: 2.0,        // fréquence du bruit (plus grand = nuages plus petits)
             speed: 0.4,       // vitesse d'ondulation (lent)
             warp: 0.6,         // intensité des volutes
-            threshold: 0.35,   // densité (plus haut = plus de vide noir)
+            threshold: 0.34,   // densité (plus haut = plus de vide noir)
             colorDeep: '#05030f',
             colorA: '#3a1a6e',
-            colorB: '#6d2762'
+            colorB: '#5a276d',
+            softness: 0.56,
+            opacity: 1.0,
         }
     }
 
@@ -46,7 +48,8 @@ export default class SpaceSky
                 uThreshold: { value: this.p.threshold },
                 uColorDeep: { value: new THREE.Color(this.p.colorDeep) },
                 uColorA: { value: new THREE.Color(this.p.colorA) },
-                uColorB: { value: new THREE.Color(this.p.colorB) }
+                uColorB: { value: new THREE.Color(this.p.colorB) },
+                uSoftness: { value: this.p.softness },
             },
             vertexShader: `
                 varying vec3 vDir;
@@ -57,7 +60,7 @@ export default class SpaceSky
             `,
             fragmentShader: `
                 varying vec3 vDir;
-                uniform float uTime, uScale, uSpeed, uWarp, uThreshold;
+                uniform float uTime, uScale, uSpeed, uWarp, uThreshold, uSoftness;
                 uniform vec3 uColorDeep, uColorA, uColorB;
 
                 float hash(vec3 p){
@@ -91,10 +94,10 @@ export default class SpaceSky
                     vec3 warp = vec3(fbm(p + t), fbm(p + t + 4.7), fbm(p + t + 9.2));
                     float n = fbm(p + warp * uWarp + t * 0.5);
 
-                    n = smoothstep(uThreshold, 1.0, n);                 // densité
+                    n = smoothstep(uThreshold, uThreshold + uSoftness, n);                 // densité
 
                     vec3 color = mix(uColorDeep, uColorA, n);          // premiers nuages
-                    color = mix(color, uColorB, smoothstep(0.55, 1.0, n)); // cœurs lumineux
+                    color = mix(color, uColorB, smoothstep(0.4, 1.0, n)); // cœurs lumineux
 
                     gl_FragColor = vec4(color, 1.0);
                 }
@@ -119,6 +122,7 @@ export default class SpaceSky
         this.debugFolder.addColor(this.p, 'colorDeep').onChange(v => u.uColorDeep.value.set(v))
         this.debugFolder.addColor(this.p, 'colorA').onChange(v => u.uColorA.value.set(v))
         this.debugFolder.addColor(this.p, 'colorB').onChange(v => u.uColorB.value.set(v))
+        this.debugFolder.add(this.p, 'softness', 0.05, 1, 0.01).onChange(v => u.uSoftness.value = v)
     }
 
     update()
