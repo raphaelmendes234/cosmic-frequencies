@@ -1,6 +1,5 @@
 import * as THREE from 'three'
-
-import Experience from '../Experience'
+import Experience from '../Experience.js'
 
 export default class Eye
 {
@@ -19,14 +18,14 @@ export default class Eye
 
         this.materialParams = {
             face: {
-                envMapIntensity: 0.8,
-                roughness: 0.18,
-                metalness: 1.0,
+                envMapIntensity: 4.0,
+                roughness: 0.2,
+                metalness: 0.82,
             }, 
             eye: {
-                envMapIntensity: 4.0,
-                roughness: 0.1,
-                metalness: 0.75,
+                envMapIntensity: 5.0,
+                roughness: 0.0,
+                metalness: 0.9,
             }
         }
 
@@ -77,13 +76,13 @@ export default class Eye
 
     setCubeCamera()
     {
-        // Créer la cible de rendu cubique (résolution de 256 ou 512 est souvent suffisante)
+        // Create cube camera target
         this.cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
             generateMipmaps: true,
             minFilter: THREE.LinearFilter
         })
 
-        // Créer la CubeCamera (near, far, renderTarget)
+        // Create CubeCamera
         this.cubeCamera = new THREE.CubeCamera(0.1, 1000, this.cubeRenderTarget)
         this.scene.add(this.cubeCamera)
     }
@@ -94,7 +93,7 @@ export default class Eye
         this.animation.mixer = new THREE.AnimationMixer(this.model)
 
         this.animation.actions = {}
-        console.log(this.ressource.animations)
+
         this.animation.actions.idle = this.animation.mixer.clipAction(this.ressource.animations[0])
 
         this.animation.actions.current = this.animation.actions.idle
@@ -149,8 +148,10 @@ export default class Eye
     {
         if (this.model && this.model.visible) {
             this.cubeCamera.position.copy(this.model.position)
+            
+            // Refresh reflection every 4 frames
             this.cubeFrame = (this.cubeFrame || 0) + 1
-            if (this.cubeFrame % 4 === 0) {          // refresh reflection 1 frame in 4
+            if (this.cubeFrame % 4 === 0) {
                 this.model.visible = false
                 this.cubeCamera.update(this.renderer.instance, this.scene)
                 this.model.visible = true

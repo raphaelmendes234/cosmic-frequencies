@@ -1,5 +1,5 @@
-import Experience from '../Experience'
 import * as THREE from 'three'
+import Experience from '../Experience.js'
 
 export default class Manager
 {
@@ -16,10 +16,10 @@ export default class Manager
         this.currentScene = 1
 
         this.sceneCount = 3
-        this.auto = true          // changement automatique activé
-        this.minDuration = 6     // durée quand le son est FORT (cuts rapides)
-        this.maxDuration = 12    // durée quand le son est FAIBLE (cuts lents)
-        this.volumeBoost = 3     // amplifie le volume (car volumeAverageSmooth reste bas)
+        this.auto = true         // Auto switching enabled
+        this.minDuration = 6     // Duration when loud (fast cuts)
+        this.maxDuration = 12    // Duration when quiet (slow cuts)
+        this.volumeBoost = 3     // Amplifies volume (volumeAverageSmooth stays low)
         this.autoTimer = 0
 
         if(this.debug.active)
@@ -30,32 +30,31 @@ export default class Manager
                 .onChange(() => { this.goToScene(parseInt(this.currentScene)) })
 
             this.debugFolder.add(this, 'auto').name('auto switch')
-            this.debugFolder.add(this, 'minDuration').min(1).max(20).step(1).name('durée mini (fort)')
-            this.debugFolder.add(this, 'maxDuration').min(1).max(30).step(1).name('durée maxi (faible)')
-            this.debugFolder.add(this, 'volumeBoost').min(1).max(10).step(0.1).name('sensibilité volume')
+            this.debugFolder.add(this, 'minDuration').min(1).max(20).step(1).name('min duration (high)')
+            this.debugFolder.add(this, 'maxDuration').min(1).max(30).step(1).name('max duration (weak)')
+            this.debugFolder.add(this, 'volumeBoost').min(1).max(10).step(0.1).name('volume sensibility')
         }
     }
 
-    // helper qui switche au creux de la coupure (écran fermé = cut masqué) 
+    // Switch at the closed point of the transition (cut hidden behind the black screen)
     goToScene(n)
     {
         this.currentScene = n
         this.postProcessing.triggerTransition(() => {
-            this.switchScene(n)                                             // exécuté écran fermé
-            if (this.sceneController) this.sceneController.updateDisplay()  // le GUI suit
+            this.switchScene(n)                                             // Runs while the screen is closed
+            if (this.sceneController) this.sceneController.updateDisplay()  // Keep the GUI in sync
         })
     }
 
     switchScene(sceneNumber)
     {
-        // On récupère les instances depuis World
-        const helmet = this.world.helmet
+        // Instances from World
         const astronaut = this.world.astronaut
         const eye = this.world.eye
         const beam = this.world.beam
         const stars = this.world.stars
 
-        // Point central pour l'OrbitControls
+        // Center target for the camera
         const centerTarget = new THREE.Vector3(0, 0, 0)
 
         switch(sceneNumber)
@@ -65,34 +64,28 @@ export default class Manager
                     astronaut.show() 
                     astronaut.setMode(1)
                 }
-                if(helmet) helmet.show()
                 if(eye) eye.hide()
                 if(beam) beam.setMode(1)
                 if(stars) stars.setMode(1)
-                // Vue de face
-                this.camera.cutToShot(new THREE.Vector3(0, 0, 8), centerTarget)
+                this.camera.cutToShot(new THREE.Vector3(0, 0, 16), centerTarget)
                 break
 
             case 2:
-                if(astronaut) { 
+                if(astronaut) {
                     astronaut.show() 
                     astronaut.setMode(2)
                 }
-                if(helmet) helmet.show()
                 if(eye) eye.hide()
                 if(beam) beam.setMode(2)
                 if(stars) stars.setMode(2)
-                // Vue de 3/4 (on décale X et Z)
                 this.camera.cutToShot(new THREE.Vector3(-3.5, 0.6, 4.3), new THREE.Vector3(5.8, -0.7, -2))
                 break
 
             case 3:
                 if(astronaut) astronaut.hide()
-                if(helmet) helmet.hide()
                 if(eye) eye.show()
                 if(beam) beam.setMode(3)
                 if(stars) stars.setMode(3)
-                // Vue rapprochée pour l'oeil
                 this.camera.cutToShot(new THREE.Vector3(0, 0, 8), centerTarget)
                 break
         }
@@ -102,12 +95,13 @@ export default class Manager
         if (!this.auto) return
         const s = this.sound
 
-        // volume amplifié et borné 0..1
+        // Volume amplified and clamped to 0..1
         const v = Math.min(s.volumeAverageSmooth * this.volumeBoost, 1)
-        // interpolation inverse : v haut → durée courte, v bas → durée longue
+
+        // Inverse mapping: high v → short duration, low v → long duration
         const targetDuration = this.maxDuration - v * (this.maxDuration - this.minDuration)
 
-        this.autoTimer += this.time.delta * 0.001   // secondes
+        this.autoTimer += this.time.delta * 0.001   // Seconds
 
         if (this.autoTimer >= targetDuration && this.sound.kickHard > 0.5) {
             const next = (this.currentScene % this.sceneCount) + 1
@@ -115,4 +109,12 @@ export default class Manager
             this.autoTimer = 0
         }
     } 
+
+    reset()
+    {
+        this.currentScene = 1
+        this.autoTimer = 0
+        this.switchScene(1)
+        if (this.sceneController) this.sceneController.updateDisplay()
+    }
 }

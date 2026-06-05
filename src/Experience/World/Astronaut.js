@@ -1,6 +1,5 @@
 import * as THREE from 'three'
-
-import Experience from '../Experience'
+import Experience from '../Experience.js'
 
 export default class Astronaut
 {
@@ -35,13 +34,13 @@ export default class Astronaut
     
     setCubeCamera()
     {
-        // Créer la cible de rendu cubique (résolution de 256 ou 512 est souvent suffisante)
+        // Create cube camera target
         this.cubeRenderTarget = new THREE.WebGLCubeRenderTarget(256, {
             generateMipmaps: true,
             minFilter: THREE.LinearFilter
         })
 
-        // Créer la CubeCamera (near, far, renderTarget)
+        // Create CubeCamera
         this.cubeCamera = new THREE.CubeCamera(0.1, 1000, this.cubeRenderTarget)
         this.scene.add(this.cubeCamera)
     }
@@ -49,8 +48,6 @@ export default class Astronaut
     setModel()
     {
         this.model = this.ressource.scene
-        // this.model.position.set(0, -5, 0)
-        // this.model.scale.set(1.5, 1.5, 1.5)
         this.scene.add(this.model)
 
         this.model.traverse((child) => 
@@ -90,9 +87,9 @@ export default class Astronaut
             const newAction = this.animation.actions[name]
             const oldAction = this.animation.actions.current
 
+            oldAction.stop()
             newAction.reset()
             newAction.play()
-            newAction.crossFadeFrom(oldAction, 1)
 
             this.animation.actions.current = newAction
         }
@@ -153,12 +150,14 @@ export default class Astronaut
         this.mode = modeNumber
 
         if (this.mode === 1) {
-            this.model.scale.set(1.75,1.75,1.75)
-            this.model.position.set(0, -6, 0)
+            this.model.scale.set(1.5,1.5,1.5)
+            this.model.position.set(-0.25, -4.5, 4)
+            this.animation.play('floating')
         } 
         else if (this.mode === 2) {
             this.model.scale.set(3,3,3)
-            this.model.position.set(-2, -10.7, 1)
+            this.model.position.set(-1, -7.5, 1)
+            this.animation.play('idle')
         } 
         else if (this.mode === 3) {
            console.log("astronaut on scene 3")
@@ -186,8 +185,10 @@ export default class Astronaut
                 this.cubeCamera.position.x += 2
                 this.cubeCamera.position.z -= 2 
             }
+            
+            // Refresh reflection every 4 frames
             this.cubeFrame = (this.cubeFrame || 0) + 1
-            if (this.cubeFrame % 4 === 0) {          // refresh reflection 1 frame in 4
+            if (this.cubeFrame % 4 === 0) {
                 this.model.visible = false
                 this.cubeCamera.update(this.renderer.instance, this.scene)
                 this.model.visible = true

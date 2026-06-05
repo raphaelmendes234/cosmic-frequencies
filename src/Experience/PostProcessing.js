@@ -1,9 +1,10 @@
 import * as THREE from 'three'
 
-import Experience from "./Experience";
+import Experience from "./Experience.js";
 
 // Effect composer
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+
 // Passes
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
@@ -28,23 +29,23 @@ export default class PostProcessing
 
         // CRT pass
         this.aberrationStrength = 0.05
-        this.transition = 1             // 1 = écran fermé (on démarre coupé pendant le chargement)
-        this.phase = 'closed'           // état courant de l'animation
-        this.t = 0                      // durée d'une coupure complète, en secondes
-        this.transitionDuration = 0.2   // durée d'une coupure complète (s)
-        this.onPeak = null              // callback à exécuter quand l'écran est fermé (pour switcher)
-        this.peakFired = false          // évite d'appeler onPeak plusieurs fois
+        this.transition = 1             // 1 = screen closed (starts cut off during loading)
+        this.phase = 'closed'           // Current animation state
+        this.t = 0                      // Progress of the current transition (0→1)
+        this.transitionDuration = 0.2   // Duration of a full cut (s)
+        this.onPeak = null              // Callback run when the screen is closed (to switch)
+        this.peakFired = false          // Prevents calling onPeak more than once
 
-        // ouvre l'écran quand les assets sont chargés
+        // Open the screen once assets are loaded
         this.experience.ressources.on('loaded', () => { this.phase = 'opening'; this.t = 0 })
 
         // Black and white pass
         this.bw = 0
         this.bwTimer = 0
-        this.bwHold = 0             // temps restant d'affichage du N&B
-        this.bwDuration = 0.6       // durée du flash (s)
-        this.bwBaseInterval = 4     // intervalle quand le son est faible (s)
-        this.bwAmount = 40          // accélération selon le volume (monter pour faire clignoter les passages forts)
+        this.bwHold = 0             // Remaining B&W display time
+        this.bwDuration = 0.6       // Flash duration (s)
+        this.bwBaseInterval = 4     // Interval when sound is low (s)
+        this.bwAmount = 40          // Volume-based acceleration (raise to blink more on loud parts)
 
         this.contrast = 1.1
 
@@ -103,10 +104,10 @@ export default class PostProcessing
 
     triggerTransition(onPeak)
     {
-        // Lance une coupure complète : se ferme puis se rouvre
+        // Start a full cut: close then reopen
         this.phase = 'pulsing'
         this.t = 0
-        this.onPeak = onPeak       // appelé au moment fermé (pour switcher le plan)
+        this.onPeak = onPeak       // Called when closed (to switch the scene)
         this.peakFired = false
     }
 
@@ -152,40 +153,41 @@ export default class PostProcessing
                 vec2 curve(vec2 uv){
                     uv = uv * 2.0 - 1.0;
                     vec2 offset = abs(uv.yx) / uCurvature;
-                    uv = uv + uv * offset * offset;   // bombe l'image (tube)
+                    uv = uv + uv * offset * offset;         // Bulge the image (tube)
                     return uv * 0.5 + 0.5;
                 }
 
                 void main(){
                     vec2 uv = curve(vUv);
 
-                    // --- Coupure CRT : on comprime l'image dans une bande horizontale ---
-                    // openY = hauteur visible de l'écran (1 = ouvert, 0 = fermé en ligne)
+                    // CRT cut: compress the image into a horizontal band
+                    // openY = visible screen height (1 = open, 0 = closed to a line)
                     float openY = 1.0 - uTransition;
-                    // on "étire" la bande visible vers la coordonnée réelle de la texture :
-                    // quand openY est petit, seul le centre (y~0.5) tombe dans [0,1]
+
+                    // Stretch the visible band toward the real texture coordinate:
+                    // when openY is small, only the center (y~0.5) falls in [0,1]
                     float y = (uv.y - 0.5) / max(openY, 0.0001) + 0.5;
                     vec2 tuv = vec2(uv.x, y);
 
-                    // Aberration chromatique : on échantillonne R et B décalés vers les bords
+                    // Chromatic aberration: sample R and B shifted toward the edges
                     vec2 ca = (tuv - 0.5) * uAberration;
                     float r = texture2D(tDiffuse, tuv - ca).r;
                     float g = texture2D(tDiffuse, tuv).g;
                     float b = texture2D(tDiffuse, tuv + ca).b;
                     vec4 color = vec4(r, g, b, 1.0);
 
-                    // Grain : bruit blanc par pixel, animé par uTime
+                    // Grain: per-pixel white noise, animated by uTime
                     float noise = hash12(gl_FragCoord.xy + fract(uTime) * 100.0);
                     color.rgb += (noise - 0.5) * uGrain;
 
-                    // Tout ce qui sort de la bande visible passe en noir
+                    // Anything outside the visible band turns black
                     if (y < 0.0 || y > 1.0) color.rgb = vec3(0.0);
 
-                    // Glow : une ligne lumineuse au centre, d'autant plus forte que l'écran est fermé
+                    // Glow: bright center line, stronger as the screen closes
                     float glow = smoothstep(openY * 0.5, 0.0, abs(uv.y - 0.5));
                     color.rgb += glow * uTransition * 0.4;
 
-                    // Cadre noir arrondi de la télé
+                    // Rounded black TV frame
                     vec2 edge = smoothstep(0.0, uBorder, uv) * (1.0 - smoothstep(1.0 - uBorder, 1.0, uv));
                     color.rgb *= edge.x * edge.y;
 
@@ -201,8 +203,8 @@ export default class PostProcessing
         if (this.debug.active) {
             const f = this.debug.gui.addFolder("CRT")
             f.close()
-            f.add(this.crtPass.material.uniforms.uCurvature, "value").min(2.5).max(10).step(0.1).name("courbure")
-            f.add(this.crtPass.material.uniforms.uBorder, "value").min(0).max(0.3).step(0.005).name("bordure")
+            f.add(this.crtPass.material.uniforms.uCurvature, "value").min(2.5).max(10).step(0.1).name("curvature")
+            f.add(this.crtPass.material.uniforms.uBorder, "value").min(0).max(0.3).step(0.005).name("border")
             f.add(this, "aberrationStrength").min(0).max(0.1).step(0.001).name("aberration")
             f.add(this.crtPass.material.uniforms.uGrain, "value").min(0).max(10).step(0.005).name("grain")
         }
@@ -212,7 +214,7 @@ export default class PostProcessing
         const BlackWhitePass = {
             uniforms: {
                 tDiffuse: { value: null },
-                uBW: { value: 0 },      // 0 = normal, 1 = noir & blanc
+                uBW: { value: 0 },                      // 0 = normal, 1 = black & white
                 uContrast: { value: this.contrast }
             },
             vertexShader: `
@@ -229,8 +231,8 @@ export default class PostProcessing
                 varying vec2 vUv;
                 void main(){
                     vec4 c = texture2D(tDiffuse, vUv);
-                    float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));         // luminance
-                    gray = clamp((gray - 0.5) * uContrast + 0.5, 0.0, 1.0);     // punch : écarte du gris moyen
+                    float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));         // Luminance
+                    gray = clamp((gray - 0.5) * uContrast + 0.5, 0.0, 1.0);     // Punch: push away from mid-gray
                     c.rgb = mix(c.rgb, vec3(gray), uBW);
                     gl_FragColor = c;
                 }
@@ -267,27 +269,28 @@ export default class PostProcessing
          * CRT pass
          */
         if (this.phase === 'closed') {
-            this.transition = 1                                 // reste fermé tant que ça charge
-        } else if (this.phase === 'opening') {                  // chargement terminé : ouverture 1 → 0
+            this.transition = 1                                 // Stays closed while loading
+        } else if (this.phase === 'opening') {                  // Loaded: opening 1 → 0
             this.t += dt / this.transitionDuration
             this.transition = 1 - Math.min(this.t, 1)
             if (this.t >= 1) this.phase = 'idle'
-        } else if (this.phase === 'pulsing') {                  // changement de plan : ferme (0→1) puis ouvre (1→0)
+        } else if (this.phase === 'pulsing') {                  // Shot change: close (0→1) then open (1→0)
             this.t += dt / this.transitionDuration
             const x = Math.min(this.t, 1)
-            this.transition = 1 - Math.abs(x * 2 - 1)           // courbe triangle : pic à mi-parcours
-            // à mi-chemin (écran fermé), on déclenche le switch une seule fois
+            this.transition = 1 - Math.abs(x * 2 - 1)           // Triangle curve: peak at midpoint
+            
+            // At midpoint (screen closed), trigger the switch once
             if (!this.peakFired && x >= 0.5) { this.peakFired = true; if (this.onPeak) this.onPeak() }
             if (this.t >= 1) this.phase = 'idle'
         } else {
-            this.transition = 0                                 // idle : écran normal
+            this.transition = 0                                 // Idle: normal screen
         }
         this.crtPass.material.uniforms.uTransition.value = this.transition
         this.crtPass.material.uniforms.uAberration.value = this.sound.kickHard * this.aberrationStrength
         this.crtPass.material.uniforms.uTime.value = this.time.elapsed * 0.001
 
         /**
-         *  black and white
+         *  Black and white
          */
         const boost = Math.pow(this.sound.volumeAverageSmooth, 2.0) * this.bwAmount
         const bwInterval = Math.max(this.bwBaseInterval / (1 + boost), 0.1)
@@ -298,7 +301,7 @@ export default class PostProcessing
         } else {
             this.bwTimer += dt
             if (this.bwTimer >= bwInterval) {
-                this.bwHold = Math.max(this.bwDuration / (1 + boost), 0.1)   // jamais sous 0.1s
+                this.bwHold = Math.max(this.bwDuration / (1 + boost), 0.1)   // Never below 0.1s
                 this.bwTimer = 0
             }
         }

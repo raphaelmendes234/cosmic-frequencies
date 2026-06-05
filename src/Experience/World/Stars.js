@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import Experience from '../Experience'
+import Experience from '../Experience.js'
 
 export default class Stars
 {
@@ -33,28 +33,29 @@ export default class Stars
     setParameters()
     {
         this.p = {}
-        // Quantités
+        
+        // Counts
         this.p.maxCount = 20000
         this.p.count = 5000
 
-        // Zone d'apparition (Cube de -limit à +limit)
+        // Spawn area (cube from -limit to +limit)
         this.p.limit = 50.0 
 
-        // Tailles
+        // Sizes
         this.p.size = 3.0
-        this.p.sizeRange = 0.8 // 0 = toutes de la même taille, 1 = écart maximal
+        this.p.sizeRange = 0.8
 
-        // Vitesse (calquée sur tes rayons)
+        // Speed (matched to the beams)
         this.p.speed = 30.0 
-        this.p.speedRandomness = 0.5 // Pour éviter que les étoiles bougent en bloc
+        this.p.speedRandomness = 0.5
 
-        // Couleurs
+        // Colors
         this.p.palettes = {
             pureWhite: [new THREE.Color('#ffffff'), new THREE.Color('#e0e0e0'), new THREE.Color('#ffffff')],
-            starlight: [new THREE.Color('#ffffff'), new THREE.Color('#aaccff'), new THREE.Color('#ffeebb')], // Blanc, léger bleu, léger jaune
+            starlight: [new THREE.Color('#ffffff'), new THREE.Color('#aaccff'), new THREE.Color('#ffeebb')],
             deepSpace: [new THREE.Color('#3a0ca3'), new THREE.Color('#b5179e'), new THREE.Color('#48bfe3')],
         }
-        this.p.activeColorMode = 'starlight' // Palette par défaut
+        this.p.activeColorMode = 'starlight' // Default palette
         this.p.colorProgress = 1.0
         this.paletteNames = Object.keys(this.p.palettes)
     }
@@ -68,16 +69,16 @@ export default class Stars
         const colorIndices = new Float32Array(this.p.maxCount)
      
         for (let i = 0; i < this.p.maxCount; i++) {
-            // Position (X, Y, Z) réparties dans la limite cubique
+            // Position (X, Y, Z) spread within the cube
             positions[i * 3 + 0] = (Math.random() - 0.5) * 2.0 * this.p.limit
             positions[i * 3 + 1] = (Math.random() - 0.5) * 2.0 * this.p.limit
             positions[i * 3 + 2] = (Math.random() - 0.5) * 2.0 * this.p.limit
 
-            // Randoms pour varier la vitesse et la taille individuelle
-            randoms[i * 2 + 0] = Math.random() // Pour moduler la vitesse
-            randoms[i * 2 + 1] = Math.random() // Pour moduler la taille
+            // Randoms for per-star speed and size
+            randoms[i * 2 + 0] = Math.random() // Modulates speed
+            randoms[i * 2 + 1] = Math.random() // Modulates size
 
-            // Index pour la couleur (0, 1, ou 2)
+            // Color index (0, 1, or 2)
             colorIndices[i] = Math.floor(Math.random() * 3)
         }
 
@@ -120,30 +121,30 @@ export default class Stars
                 void main() {
                     vec3 localPosition = position;
 
-                    // 1. Défilement infini sur Z
-                    // On varie un peu la vitesse de chaque particule grâce à aRandom.x
+                    // 1. Infinite scroll on Z
+                    // Vary each particle's speed via aRandom.x
                     float currentMultiplier = mix(1.0, aRandom.x, uSpeedRandomness);
                     float zMovement = localPosition.z + uTime * uSpeed * currentMultiplier;
                     
-                    // Logique du modulo pour faire boucler les étoiles de +limit à -limit
+                    // Modulo to loop stars from +limit to -limit
                     float totalDist = uLimit * 2.0;
                     float modZ = mod(zMovement + uLimit, totalDist) - uLimit;
                     localPosition.z = modZ;
 
-                    // 2. Positionnement final
+                    // 2. Final positioning
                     vec4 modelPosition = modelMatrix * vec4(localPosition, 1.0);
                     vec4 viewPosition = viewMatrix * modelPosition;
                     vec4 projectedPosition = projectionMatrix * viewPosition;
                     gl_Position = projectedPosition;
 
-                    // 3. Taille des particules (atténuée par la perspective)
+                    // 3. Particle size
                     float particleSize = uSize * mix(1.0 - uSizeRange, 1.0, aRandom.y);
                     gl_PointSize = particleSize;
 
-                    // 4. Variables pour le fragment
+                    // 4. Pass to fragment
                     vColorIndex = aColorIndex;
                     
-                    // Adoucir l'apparition/disparition aux limites Z pour éviter les clignotements
+                    // Fade in/out near Z limits to avoid popping
                     float distToLimit = uLimit - abs(localPosition.z);
                     vAlpha = smoothstep(0.0, 5.0, distToLimit);
                 }
@@ -157,14 +158,14 @@ export default class Stars
                 varying float vAlpha;
 
                 void main() {
-                    // Création d'une forme circulaire douce pour l'étoile
+                    // Soft circular star shape
                     float distToCenter = distance(gl_PointCoord, vec2(0.5));
                     float circleAlpha = 1.0 - smoothstep(0.2, 0.5, distToCenter);
                     
-                    // Si on est en dehors du cercle, on ne rend pas le pixel
+                    // Discard pixels outside the circle
                     if(distToCenter > 0.5) discard;
 
-                    // Gestion des couleurs
+                    // Colors
                     int index = int(vColorIndex);
                     vec3 color1 = uPalette1[index];
                     vec3 color2 = uPalette2[index];
@@ -179,7 +180,7 @@ export default class Stars
     setPoints()
     {
         this.points = new THREE.Points(this.geometry, this.material)
-        // L'astuce ici est de modifier la limite d'affichage si count change via GUI
+        // Draw range lets count change via the GUI
         this.points.geometry.setDrawRange(0, this.p.count)
         this.group.add(this.points)
     }
@@ -188,7 +189,7 @@ export default class Stars
     {
         this.mode = modeNumber
 
-        // On calque exactement la rotation du groupe sur les modes de Beam.js
+        // Group rotation matched to Beam's modes
         if (this.mode === 1) {
             this.group.rotation.set(0, Math.PI, 0)
             this.p.size = 6.7
@@ -251,14 +252,14 @@ export default class Stars
 
         this.material.uniforms.uTime.value += deltaTime * 0.001
         
-        // Maj des variables depuis le GUI
+        // Update uniforms from the GUI
         this.material.uniforms.uLimit.value = this.p.limit
         this.material.uniforms.uSize.value = this.p.size
         this.material.uniforms.uSizeRange.value = this.p.sizeRange
         this.material.uniforms.uSpeed.value = this.p.speed
         this.material.uniforms.uSpeedRandomness.value = this.p.speedRandomness
 
-        // Gestion du Crossfade des couleurs (exactement comme Beam.js)
+        // Color crossfade (same as Beam.js)
         if (this.p.colorProgress < 1.0) {
             this.p.colorProgress += deltaTime * 0.002 
             if (this.p.colorProgress > 1.0) {
