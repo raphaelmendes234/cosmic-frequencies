@@ -84,6 +84,7 @@ export default class Eye
 
         // Create CubeCamera
         this.cubeCamera = new THREE.CubeCamera(0.1, 1000, this.cubeRenderTarget)
+        this.cubeCamera.children.forEach((cam) => cam.layers.set(1))   // reflect only the beams (layer 1)
         this.scene.add(this.cubeCamera)
     }
 

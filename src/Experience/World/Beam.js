@@ -283,6 +283,7 @@ export default class Beam
         this.mesh.count = this.p.count
         this.mesh.frustumCulled = false 
         this.spinner.add(this.mesh)
+        this.mesh.layers.enable(1)      // also visible to the reflection cube cameras
     }
 
     setMode(modeNumber)

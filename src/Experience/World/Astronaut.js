@@ -16,9 +16,9 @@ export default class Astronaut
         this.ressource = this.ressources.items.astronautModel
         
         this.materialParams = {
-            envMapIntensity: 3.0,
+            envMapIntensity: 5.0,
             roughness: 0.3,
-            metalness: 1.0,
+            metalness: 0.8,
         }
         
         this.setCubeCamera()
@@ -42,6 +42,7 @@ export default class Astronaut
 
         // Create CubeCamera
         this.cubeCamera = new THREE.CubeCamera(0.1, 1000, this.cubeRenderTarget)
+        this.cubeCamera.children.forEach((cam) => cam.layers.set(1))   // reflect only the beams (layer 1)
         this.scene.add(this.cubeCamera)
     }
 
