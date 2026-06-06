@@ -149,9 +149,10 @@ export default class Eye
         if (this.model && this.model.visible) {
             this.cubeCamera.position.copy(this.model.position)
             
-            // Refresh reflection every 4 frames
-            this.cubeFrame = (this.cubeFrame || 0) + 1
-            if (this.cubeFrame % 4 === 0) {
+            // Refresh reflection ~25 times/sec (framerate-independent)
+            this.cubeAccum = (this.cubeAccum || 0) + this.time.delta
+            if (this.cubeAccum >= 40) {   // ms between refreshes
+                this.cubeAccum = 0
                 this.model.visible = false
                 this.cubeCamera.update(this.renderer.instance, this.scene)
                 this.model.visible = true
