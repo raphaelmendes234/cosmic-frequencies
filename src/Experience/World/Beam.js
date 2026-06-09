@@ -469,7 +469,7 @@ export default class Beam
         this.material.uniforms.uSpeedRandomness.value = this.p.speedRandomness
 
         // Cylinders length on volume
-        this.material.uniforms.uLength.value = 0 + Math.pow(s.volumeAverageSmooth, 2.0) * this.p.audioLength
+        this.material.uniforms.uLength.value = this.p.length + Math.pow(s.volumeAverageSmooth, 2.0) * this.p.audioLength
         this.material.uniforms.uLengthRange.value = this.p.lengthRange
 
         this.material.uniforms.uThickness.value = this.p.thickness + s.kickHard * this.p.audioThickness
