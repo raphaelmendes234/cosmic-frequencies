@@ -15,17 +15,24 @@ export default class Manager
 
         this.currentScene = 1
 
-        this.sceneCount = 4
+        this.sceneCount = 5
+        this.transitioning = false
         this.auto = true         // Auto switching enabled
         this.minDuration = 6     // Duration when loud (fast cuts)
         this.maxDuration = 12    // Duration when quiet (slow cuts)
         this.volumeBoost = 3     // Amplifies volume (volumeAverageSmooth stays low)
         this.autoTimer = 0
 
+        // One-shot scenes advance when their camera animation ends
+        this.camera.onSceneEnd = () => {
+            const next = (this.currentScene % this.sceneCount) + 1
+            this.goToScene(next)
+        }
+
         if(this.debug.active)
         {
             this.debugFolder = this.debug.gui.addFolder('MANAGER')
-            this.sceneController = this.debugFolder.add(this, 'currentScene', { 'scene 1': 1, 'scene 2': 2, 'scene 3': 3, 'scene 4': 4 })
+            this.sceneController = this.debugFolder.add(this, 'currentScene', { 'scene 1': 1, 'scene 2': 2, 'scene 3': 3, 'scene 4': 4, 'scene 5': 5 })
                 .name('Change scene')
                 .onChange(() => { this.goToScene(parseInt(this.currentScene)) })
 
@@ -38,11 +45,15 @@ export default class Manager
 
     // Switch at the closed point of the transition (cut hidden behind the black screen)
     goToScene(n)
-    {
+    {   
+        if (this.transitioning) return                                      // Ignore re-entrant calls while a transition is playing
+        this.transitioning = true
         this.currentScene = n
+        this.autoTimer = 0                                                  // Reset the scene-duration timer on every change
         this.postProcessing.triggerTransition(() => {
             this.switchScene(n)                                             // Runs while the screen is closed
             if (this.sceneController) this.sceneController.updateDisplay()  // Keep the GUI in sync
+            this.transitioning = false
         })
     }
 
@@ -53,9 +64,7 @@ export default class Manager
         const eye = this.world.eye
         const beam = this.world.beam
         const stars = this.world.stars
-
-        // Center target for the camera
-        const centerTarget = new THREE.Vector3(0, 0, 0)
+        const camera = this.camera
 
         switch(sceneNumber)
         {
@@ -65,7 +74,7 @@ export default class Manager
                 eye?.hide()
                 beam?.setMode(1)
                 stars?.setMode(1)
-                this.camera.cutToShot(new THREE.Vector3(0, 0, 16), centerTarget)
+                camera?.setMode(1)
                 break
 
             case 2:
@@ -74,30 +83,39 @@ export default class Manager
                 eye?.hide()
                 beam?.setMode(2)
                 stars?.setMode(2)
-                this.camera.cutToShot(new THREE.Vector3(-3.5, 0.6, 4.3), new THREE.Vector3(5.8, -0.7, -2))
+                camera?.setMode(2)
                 break
 
             case 3:
-                astronaut?.hide()
-                eye?.show()
+                astronaut?.show()
+                astronaut?.setMode(3)
+                eye?.hide()
                 beam?.setMode(3)
                 stars?.setMode(3)
-                this.camera.cutToShot(new THREE.Vector3(0, 0, 8), centerTarget)
+                camera?.setMode(3)
                 break
             
             case 4:
-                astronaut?.show() 
-                astronaut?.setMode(4)
-                eye?.hide()
+                astronaut?.hide() 
+                eye?.show()
                 beam?.setMode(4)
                 stars?.setMode(4)
-                this.camera.cutToShot(new THREE.Vector3(-2.8, 0.6, 7), new THREE.Vector3(1.1, -0.5, 0.2))
+                camera?.setMode(4)
+                break
+            case 5:
+                astronaut?.show()
+                astronaut?.setMode(5)
+                eye?.hide()
+                beam?.setMode(5)
+                stars?.setMode(5)
+                camera?.setMode(5)
                 break
         }
     }
 
     update() {
         if (!this.auto) return
+        if (!this.camera.loop) return   // One shot, handled by camera onComplete
         const s = this.sound
 
         // Volume amplified and clamped to 0..1
@@ -111,7 +129,6 @@ export default class Manager
         if (this.autoTimer >= targetDuration && this.sound.kickHard > 0.5) {
             const next = (this.currentScene % this.sceneCount) + 1
             this.goToScene(next)
-            this.autoTimer = 0
         }
     } 
 

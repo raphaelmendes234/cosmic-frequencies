@@ -147,19 +147,19 @@ export default class Eye
 
     update()
     {
-        if (this.model && this.model.visible) {
-            this.cubeCamera.position.copy(this.model.position)
+        if (!this.model || !this.model.visible) return
+        
+        this.cubeCamera.position.copy(this.model.position)
             
-            // Refresh reflection ~25 times/sec (framerate-independent)
-            this.cubeAccum = (this.cubeAccum || 0) + this.time.delta
-            if (this.cubeAccum >= 40) {   // ms between refreshes
-                this.cubeAccum = 0
-                this.model.visible = false
-                this.cubeCamera.update(this.renderer.instance, this.scene)
-                this.model.visible = true
-            }
-
-            this.animation.mixer.update(this.time.delta * 0.001 * Math.min(Math.pow(this.sound.volumeAverageSmooth, 3.0) * 25, 2))
+        // Refresh reflection ~25 times/sec (framerate-independent)
+        this.cubeAccum = (this.cubeAccum || 0) + this.time.delta
+        if (this.cubeAccum >= 40) {   // ms between refreshes
+            this.cubeAccum = 0
+            this.model.visible = false
+            this.cubeCamera.update(this.renderer.instance, this.scene)
+            this.model.visible = true
         }
+
+        this.animation.mixer.update(this.time.delta * 0.001 * Math.min(Math.pow(this.sound.volumeAverageSmooth, 3.0) * 25, 2))
     }
 }

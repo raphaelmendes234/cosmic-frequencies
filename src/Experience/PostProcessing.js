@@ -87,9 +87,9 @@ export default class PostProcessing
 
     setUnrealBloomPass() {
         this.unrealBloomPass = new UnrealBloomPass()
-        this.unrealBloomPass.strength = 0.2
-        this.unrealBloomPass.radius = 2
-        this.unrealBloomPass.threshold = 0.5
+        this.unrealBloomPass.strength = 0.3
+        this.unrealBloomPass.radius = 0.1
+        this.unrealBloomPass.threshold = 0.1
         this.unrealBloomPass.enabled = true
         this.effectComposer.addPass(this.unrealBloomPass)
 

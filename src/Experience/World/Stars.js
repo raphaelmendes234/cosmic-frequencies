@@ -195,16 +195,20 @@ export default class Stars
             this.p.size = 6.7
         } 
         else if (this.mode === 2) {
-            this.group.rotation.set(Math.PI * 0.05, Math.PI + 0.5, 0)
+            this.group.rotation.set(1.6, 0, -1)
             this.p.size = 3
         } 
         else if (this.mode === 3) {
-            this.group.rotation.set(-Math.PI * 0.5, 0, 0)
+            this.group.rotation.set(-0.5, 0, 0)
             this.p.size = 3
         }
         else if (this.mode === 4) {
-            this.group.rotation.set(0, Math.PI * 2, 0)
+            this.group.rotation.set(-Math.PI * 0.5, 0, 0)
             this.p.size = 3
+        }
+        else if (this.mode === 5) {
+            this.group.rotation.set(-0.8, -0.5, 0.6)
+            this.p.size = 6.7
         }
     }
 
@@ -262,7 +266,15 @@ export default class Stars
 
     update()
     {
+        if (!this.group || !this.group.visible) return
+
         const deltaTime = this.time.delta
+        const elapsedTime = this.time.elapsed
+
+        if (this.mode === 3) {
+            this.group.rotation.y = Math.sin(elapsedTime * 0.001 * 0.5)
+            this.group.rotation.x = Math.cos(elapsedTime * 0.001 * 0.5)
+        }
 
         this.material.uniforms.uTime.value += deltaTime * 0.001
         

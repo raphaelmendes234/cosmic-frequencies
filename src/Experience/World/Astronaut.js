@@ -22,6 +22,7 @@ export default class Astronaut
         }
         
         this.setCubeCamera()
+        this.setGroup()
         this.setModel()
         
         if (this.debug.active) {
@@ -46,6 +47,12 @@ export default class Astronaut
         this.scene.add(this.cubeCamera)
     }
 
+    setGroup()
+    {
+        this.group = new THREE.Group()
+        this.scene.add(this.group)
+    }
+
     setModel()
     {
         this.model = this.ressource.scene
@@ -64,8 +71,17 @@ export default class Astronaut
                 mat.metalness = this.materialParams.metalness
     
                 mat.needsUpdate = true;
-        }
+            }
         })
+
+        const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1, 1),
+            new THREE.MeshBasicMaterial({ color: "red", wireframe: true})
+        )
+        this.group.add(mesh)
+
+        this.group.add(this.model)
+        this.model.position.set(-0.2, -2.6, 0)  // Set with floating animation on (sketchfab model), so it was high
     }
 
     setAnimation()
@@ -146,31 +162,50 @@ export default class Astronaut
 
     setMode(modeNumber)
     {
-        if (!this.model || !this.model.visible) return
+        if (!this.group || !this.model || !this.model.visible) return
         
         this.mode = modeNumber
 
-        if (this.mode === 1) {
-            this.model.scale.set(1.5,1.5,1.5)
-            this.model.position.set(-0.25, -4.5, 4)
-            this.model.rotation.set(0, 0, 0)
+        if (this.mode === 1) 
+        {
+            this.group.scale.set(0.5, 0.5, 0.5)
+            this.group.position.set(0, 0, 0)
+            this.group.rotation.set(0, 0, 0)
+            
             this.animation.play('floating')
+            this.model.position.set(-0.2, -2.6, 0)
         } 
-        else if (this.mode === 2) {
-            this.model.scale.set(3,3,3)
-            this.model.position.set(-1, -7.5, 1)
-            this.model.rotation.set(0, 0, 0)
+        else if (this.mode === 2) 
+        {
+            this.group.scale.set(1, 1, 1)
+            this.group.position.set(0, -0.5, 0)
+            this.group.rotation.set(-Math.PI * 0.5, 0, -Math.PI * 0.5)
+            
             this.animation.play('idle')
+            this.model.position.set(0, -1.6, 0)
         } 
-        else if (this.mode === 3) {
-           console.log("astronaut on scene 3")
+        else if (this.mode === 3) 
+        {
+            this.group.scale.set(1, 1, 1)
+            this.group.position.set(0, 0, 0)
+            this.group.rotation.set(-Math.PI * 0.2, Math.PI * 0.1, 0)
+
+            this.animation.play('idle')
+            this.model.position.set(0, -1.6, 0)
         }
-        else if (this.mode === 4) {
-            this.model.scale.set(3,3,3)
-            this.model.position.set(2, -5, -3)
-            this.model.rotation.set(Math.PI * 0.3, -Math.PI * 0.8, 0)
-            this.animation.play('idle')
+        else if (this.mode === 4) 
+        {
+            console.log("astronaut on scene 4")
         } 
+        else if(this.mode === 5) 
+        {
+            this.group.scale.set(0.3, 0.3, 0.3)
+            this.group.position.set(0, 0, 0)
+            this.group.rotation.set(0, 0, 0)
+            
+            this.animation.play('floating')
+            this.model.position.set(-0.2, -2.6, 0)
+        }
     }
 
     show()
@@ -185,26 +220,43 @@ export default class Astronaut
 
     update()
     {
-        if (this.model && this.model.visible) {
-            this.cubeCamera.position.copy(this.model.position)
-            if (this.mode === 1) {
-                this.cubeCamera.position.y += 6 
-            } else if (this.mode === 2) {
-                this.cubeCamera.position.y += 12 
-                this.cubeCamera.position.x += 2
-                this.cubeCamera.position.z -= 2 
-            }
-            
-            // Refresh reflection ~25 times/sec (framerate-independent)
-            this.cubeAccum = (this.cubeAccum || 0) + this.time.delta
-            if (this.cubeAccum >= 40) {   // ms between refreshes
-                this.cubeAccum = 0
-                this.model.visible = false
-                this.cubeCamera.update(this.renderer.instance, this.scene)
-                this.model.visible = true
-            }
+        if (!this.model || !this.model.visible) return
+        
+        const deltaTime = this.time.delta
+        const elapsedTime = this.time.elapsed
 
-            this.animation.mixer.update(this.time.delta * 0.001)
+        // Group rotation
+        if (this.mode === 1) {
+            this.group.rotation.x += deltaTime * 0.001 * 0.05
+            this.group.rotation.y += deltaTime * 0.001 * 0.5
+            this.group.rotation.z += deltaTime * 0.001 * 0.5
+        } 
+        else if (this.mode === 5) {
+            this.group.rotation.x += deltaTime * 0.001 * 0.05
+            this.group.rotation.y += deltaTime * 0.001 * 0.5
+            this.group.rotation.z += deltaTime * 0.001 * 0.5
         }
+
+        // Cube camera positioning
+        this.cubeCamera.position.copy(this.model.position)
+        if (this.mode === 1) {
+            this.cubeCamera.position.y += 6
+        } 
+        else if (this.mode === 2) {
+            this.cubeCamera.position.y += 12 
+            this.cubeCamera.position.x += 2
+            this.cubeCamera.position.z -= 2 
+        }
+            
+        // Refresh reflection ~25 times/sec (framerate-independent)
+        this.cubeAccum = (this.cubeAccum || 0) + this.time.delta
+        if (this.cubeAccum >= 40) {   // ms between refreshes
+            this.cubeAccum = 0
+            this.model.visible = false
+            this.cubeCamera.update(this.renderer.instance, this.scene)
+            this.model.visible = true
+        }
+
+        this.animation.mixer.update(this.time.delta * 0.001)
     }
 }

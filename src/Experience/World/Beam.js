@@ -29,9 +29,6 @@ export default class Beam
     {
         this.group = new THREE.Group()
         this.scene.add(this.group)
-
-        this.spinner = new THREE.Group()   // spins around the tube axis (swirl)
-        this.group.add(this.spinner)
     }
 
     setParameters()
@@ -70,8 +67,6 @@ export default class Beam
         this.p.activeColorMode = 'nebula'
         this.p.colorProgress = 1.0
 
-        this.p.swirlSpeed = 0.3   // swirl rotation speed (rad/s)
-
         /**
          * Audio
          */
@@ -81,7 +76,7 @@ export default class Beam
         this.p.audioFrequency = 1.0
         
         this.p.audioFreqThreshold = 0.9
-        this.p.audioFreqStrength = 2
+        this.p.audioFreqStrength = 2.0
         this.freqPulse = 0
         this.freqWasAbove = false
     
@@ -282,7 +277,7 @@ export default class Beam
         this.mesh = new THREE.InstancedMesh( this.geometry, this.material, this.p.maxCount )
         this.mesh.count = this.p.count
         this.mesh.frustumCulled = false 
-        this.spinner.add(this.mesh)
+        this.group.add(this.mesh)
         this.mesh.layers.enable(1)      // also visible to the reflection cube cameras
     }
 
@@ -291,37 +286,65 @@ export default class Beam
         this.mode = modeNumber
 
         if (this.mode === 1) {
+            this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, Math.PI, 0)
 
             this.p.startDiameter = 30.0
-            this.p.endDiameter = 6.7
+            this.p.endDiameter = 0.1
             this.p.curvature = -4.0
-            this.p.noiseStrength = 0.3
+            this.p.noiseStrength = 0.1
+
+            this.p.audioAmplitude = 2.0
+            this.p.audioFreqStrength = 2.0
         } 
         else if (this.mode === 2) {
-            this.group.rotation.set(Math.PI * 0.05, Math.PI + 0.5 , 0)
+            this.group.position.set(0, 0, 0)
+            this.group.rotation.set(1.6, 0, -1)
 
-            this.p.startDiameter = 10.0
-            this.p.endDiameter = 30.0
-            this.p.curvature = -4.0
-            this.p.noiseStrength = 0.3
+            this.p.startDiameter = 0.1
+            this.p.endDiameter = 0.1
+            this.p.curvature = 16.0
+            this.p.noiseStrength = 0.0
+
+            this.p.audioAmplitude = 5.7
+            this.p.audioFreqStrength = 2.0 
         } 
         else if (this.mode === 3) {
+            this.group.position.set(0, 0, 0)
+            this.group.rotation.set(-0.5, 0, 0)
+
+            this.p.startDiameter = 0.1
+            this.p.endDiameter = 0.1
+            this.p.curvature = 8.0
+            this.p.noiseStrength = 0.1
+
+            this.p.audioAmplitude = 6.7
+            this.p.audioFreqStrength = 2.0 
+        }
+        else if (this.mode === 4) {
+            this.group.position.set(0, 0, 0)
             this.group.rotation.set(-Math.PI * 0.5, 0, 0)
 
             this.p.startDiameter = 20.0
             this.p.endDiameter = 20.0
             this.p.curvature = 0.0
             this.p.noiseStrength = 0.3
+
+            this.p.audioAmplitude = 6.7
+            this.p.audioFreqStrength = 2.0 
         }
-        else if (this.mode === 4) {
-            this.group.rotation.set(0, Math.PI * 2, 0)
+        else if (this.mode === 5) {
+            this.group.position.set(0, 3, 0)
+            this.group.rotation.set(-0.8, -0.5, 0.6)
 
             this.p.startDiameter = 0.1
-            this.p.endDiameter = 30.0
-            this.p.curvature = -1.9
-            this.p.noiseStrength = 0.0
-        }
+            this.p.endDiameter = 0.1
+            this.p.curvature = -14.0
+            this.p.noiseStrength = 0.1
+
+            this.p.audioAmplitude = 10.0
+            this.p.audioFreqStrength = 1.0
+        } 
 
         // Refresh debug
         if(this.debug.active && this.debugFolder)
@@ -412,7 +435,7 @@ export default class Beam
         const tubeFolder = this.debugFolder.addFolder("tube form").close()
         tubeFolder.add(this.p, "startDiameter").min(0.1).max(100).step(0.1).name("start diameter (z-)")
         tubeFolder.add(this.p, "endDiameter").min(0.1).max(100).step(0.1).name("end diameter (z+)")
-        tubeFolder.add(this.p, "curvature").min(-15).max(15).step(0.1).name("curve (- in / + out)")
+        tubeFolder.add(this.p, "curvature").min(-30).max(30).step(0.1).name("curve (- in / + out)")
         tubeFolder.add(this.p, "noiseStrength").min(0).max(5).step(0.01).name("alignment noise")
 
         // Deformation
@@ -424,9 +447,6 @@ export default class Beam
         // Colors
         const colorFolder = this.debugFolder.addFolder("colors").close()
         colorFolder.add(this.p, 'activeColorMode', this.paletteNames).name('color ambiance').onChange((newMode) => { this.changeColorMode(newMode) })
-
-        const swirlFolder = this.debugFolder.addFolder("swirl").close()
-        swirlFolder.add(this.p, "swirlSpeed").min(-3).max(3).step(0.01).name("swirl speed")
     }
 
     refreshGuiDisplay(folder)
@@ -439,9 +459,17 @@ export default class Beam
 
     update()
     {
+        if (!this.group || !this.group.visible) return
+
         const deltaTime = this.time.delta
+        const elapsedTime = this.time.elapsed
 
         const s = this.sound
+
+        if (this.mode === 3) {
+            this.group.rotation.y = Math.sin(elapsedTime * 0.001 * 0.5)
+            this.group.rotation.x = Math.cos(elapsedTime * 0.001 * 0.5)
+        }
 
         this.material.uniforms.uTime.value += deltaTime * 0.001
 
@@ -490,8 +518,5 @@ export default class Beam
             }
             this.material.uniforms.uColorProgress.value = this.p.colorProgress
         }
-
-        // Swirl rotation
-        this.spinner.rotation.z += this.p.swirlSpeed * deltaTime * 0.001
     }
 }
