@@ -19,7 +19,7 @@ export default class Manager
         this.transitioning = false
         this.auto = true         // Auto switching enabled
         this.minDuration = 6     // Duration when loud (fast cuts)
-        this.maxDuration = 12    // Duration when quiet (slow cuts)
+        this.maxDuration = 10    // Duration when quiet (slow cuts)
         this.volumeBoost = 3     // Amplifies volume (volumeAverageSmooth stays low)
         this.autoTimer = 0
 

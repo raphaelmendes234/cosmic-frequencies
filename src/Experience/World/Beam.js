@@ -80,7 +80,7 @@ export default class Beam
         this.freqPulse = 0
         this.freqWasAbove = false
     
-        this.p.audioAlignment = 0.5
+        this.p.audioAlignment = 0.0
 
         this.p.colorCooldown = 0.4
         this.colorTimer = 0
@@ -294,8 +294,9 @@ export default class Beam
             this.p.curvature = -4.0
             this.p.noiseStrength = 0.1
 
-            this.p.audioAmplitude = 2.0
-            this.p.audioFreqStrength = 2.0
+            this.p.audioLength = 50.0
+            this.p.audioAmplitude = 3.5
+            this.p.audioFreqStrength = 3.0
         } 
         else if (this.mode === 2) {
             this.group.position.set(0, 0, 0)
@@ -306,8 +307,9 @@ export default class Beam
             this.p.curvature = 16.0
             this.p.noiseStrength = 0.0
 
-            this.p.audioAmplitude = 5.7
-            this.p.audioFreqStrength = 2.0 
+            this.p.audioLength = 30.0
+            this.p.audioAmplitude = 6.7
+            this.p.audioFreqStrength = 1.0 
         } 
         else if (this.mode === 3) {
             this.group.position.set(0, 0, 0)
@@ -318,6 +320,7 @@ export default class Beam
             this.p.curvature = 8.0
             this.p.noiseStrength = 0.1
 
+            this.p.audioLength = 30.0
             this.p.audioAmplitude = 6.7
             this.p.audioFreqStrength = 2.0 
         }
@@ -330,6 +333,7 @@ export default class Beam
             this.p.curvature = 0.0
             this.p.noiseStrength = 0.3
 
+            this.p.audioLength = 50.0
             this.p.audioAmplitude = 6.7
             this.p.audioFreqStrength = 2.0 
         }
@@ -342,8 +346,9 @@ export default class Beam
             this.p.curvature = -14.0
             this.p.noiseStrength = 0.1
 
+            this.p.audioLength = 50.0
             this.p.audioAmplitude = 10.0
-            this.p.audioFreqStrength = 1.0
+            this.p.audioFreqStrength = 2.0
         } 
 
         // Refresh debug

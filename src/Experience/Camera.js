@@ -27,7 +27,7 @@ export default class Camera
         this.animElapsed = 0            // Manual playhead, in seconds
         this.animDone = false           // Guards a single onSceneEnd call
         this.baseSpeed = 1.0            // Base animation speed
-        this.volumeSpeedFactor = 2.0    // Volume influence on speed
+        this.volumeSpeedFactor = 8.0    // Volume influence on speed
 
         this.setInstance()
         this.setScenes()
@@ -101,8 +101,11 @@ export default class Camera
             1: {
                 loop: false,
                 build: () => gsap.timeline({ paused: true })
-                    .fromTo(this.instance.position, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 10, duration: 12, ease: 'none' })
+                    .fromTo(this.instance.position, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 10, duration: 20, ease: 'none' })
                     .fromTo(this.target, { x: 0, y: 0, z: -10}, { x: 0, y: 0, z: 0, duration: 6 }, 0),
+                // loop: true,
+                // position: new THREE.Vector3(0, 0, 8),
+                // target: new THREE.Vector3(0, 0, 0),
             },
             2: {
                 loop: true,
