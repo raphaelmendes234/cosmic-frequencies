@@ -98,7 +98,7 @@ export default class Camera
     {
         this.scenes = {
             // One-shot animation → its end triggers the next scene
-            1: {
+            travelling: {
                 loop: false,
                 build: () => gsap.timeline({ paused: true })
                     .fromTo(this.instance.position, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 10, duration: 20, ease: 'none' })
@@ -107,7 +107,7 @@ export default class Camera
                 // position: new THREE.Vector3(0, 0, 8),
                 // target: new THREE.Vector3(0, 0, 0),
             },
-            2: {
+            falling: {
                 loop: true,
                 build: () => {
                     const R = 6                             // Base radius
@@ -129,17 +129,17 @@ export default class Camera
                         })
                 },
             },
-            3: {
+            closeup: {
                 loop: true,
                 position: new THREE.Vector3(0, 0.5, 1),
                 target: new THREE.Vector3(0, 0.7, 0),
             },
-            4: {
+            eye: {
                 loop: true,
                 position: new THREE.Vector3(0, 0, 8),
                 target: new THREE.Vector3(0, 0, 0),
             },
-            5: {
+            far: {
                 loop: true,
                 build: () => {
                     const R = 8                             // Base radius
@@ -162,9 +162,9 @@ export default class Camera
         }
     }
 
-    setMode(n)
+    setMode(name)
     {
-        const config = this.scenes[n]
+        const config = this.scenes[name]
         if (this.tl) { this.tl.kill(); this.tl = null }     // Drop the previous timeline
         this.animElapsed = 0
         this.animDone = false

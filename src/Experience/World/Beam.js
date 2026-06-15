@@ -11,7 +11,7 @@ export default class Beam
         this.debug = this.experience.debug
         this.sound = this.experience.sound
 
-        this.mode = 1
+        this.mode = "travelling"
         
         this.setParameters()
         this.setGroup()
@@ -281,11 +281,11 @@ export default class Beam
         this.mesh.layers.enable(1)      // also visible to the reflection cube cameras
     }
 
-    setMode(modeNumber)
+    setMode(name)
     {
-        this.mode = modeNumber
+        this.mode = name
 
-        if (this.mode === 1) {
+        if (this.mode === "travelling") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, Math.PI, 0)
 
@@ -298,7 +298,7 @@ export default class Beam
             this.p.audioAmplitude = 3.5
             this.p.audioFreqStrength = 3.0
         } 
-        else if (this.mode === 2) {
+        else if (this.mode === "falling") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(1.6, 0, -1)
 
@@ -311,7 +311,7 @@ export default class Beam
             this.p.audioAmplitude = 6.7
             this.p.audioFreqStrength = 1.0 
         } 
-        else if (this.mode === 3) {
+        else if (this.mode === "closeup") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-0.5, 0, 0)
 
@@ -324,7 +324,7 @@ export default class Beam
             this.p.audioAmplitude = 6.7
             this.p.audioFreqStrength = 2.0 
         }
-        else if (this.mode === 4) {
+        else if (this.mode === "eye") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-Math.PI * 0.5, 0, 0)
 
@@ -337,7 +337,7 @@ export default class Beam
             this.p.audioAmplitude = 6.7
             this.p.audioFreqStrength = 2.0 
         }
-        else if (this.mode === 5) {
+        else if (this.mode === "far") {
             this.group.position.set(0, 3, 0)
             this.group.rotation.set(-0.8, -0.5, 0.6)
 
@@ -471,7 +471,7 @@ export default class Beam
 
         const s = this.sound
 
-        if (this.mode === 3) {
+        if (this.mode === 'closeup') {
             this.group.rotation.y = Math.sin(elapsedTime * 0.001 * 0.5)
             this.group.rotation.x = Math.cos(elapsedTime * 0.001 * 0.5)
         }

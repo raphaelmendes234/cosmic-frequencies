@@ -10,7 +10,7 @@ export default class Stars
         this.time = this.experience.time
         this.debug = this.experience.debug
 
-        this.mode = 1
+        this.mode = "travelling"
         
         this.setParameters()
         this.setGroup()
@@ -185,28 +185,28 @@ export default class Stars
         this.group.add(this.points)
     }
 
-    setMode(modeNumber)
+    setMode(name)
     {
-        this.mode = modeNumber
+        this.mode = name
 
         // Group rotation matched to Beam's modes
-        if (this.mode === 1) {
+        if (this.mode === "travelling") {
             this.group.rotation.set(0, Math.PI, 0)
             this.p.size = 6.7
         } 
-        else if (this.mode === 2) {
+        else if (this.mode === "falling") {
             this.group.rotation.set(1.6, 0, -1)
             this.p.size = 3
         } 
-        else if (this.mode === 3) {
+        else if (this.mode === "closeup") {
             this.group.rotation.set(-0.5, 0, 0)
             this.p.size = 3
         }
-        else if (this.mode === 4) {
+        else if (this.mode === "eye") {
             this.group.rotation.set(-Math.PI * 0.5, 0, 0)
             this.p.size = 3
         }
-        else if (this.mode === 5) {
+        else if (this.mode === "far") {
             this.group.rotation.set(-0.8, -0.5, 0.6)
             this.p.size = 6.7
         }
@@ -271,7 +271,7 @@ export default class Stars
         const deltaTime = this.time.delta
         const elapsedTime = this.time.elapsed
 
-        if (this.mode === 3) {
+        if (this.mode === "closeup") {
             this.group.rotation.y = Math.sin(elapsedTime * 0.001 * 0.5)
             this.group.rotation.x = Math.cos(elapsedTime * 0.001 * 0.5)
         }

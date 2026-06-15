@@ -45,6 +45,7 @@ export default class Eye
         this.model.position.set(-1.2, -2.5 , 3.5)
         this.model.rotation.set(0, Math.PI * 0.25 , 0)
         this.model.scale.set(0.3, 0.3, 0.3)
+        this.model.visible = false
         this.scene.add(this.model)
 
         this.model.traverse((child) => 
@@ -133,6 +134,20 @@ export default class Eye
             this.faceMesh.material.metalness = value
             this.faceMesh.material.needsUpdate = true
             })
+    }
+
+    setMode(name)
+    {
+        if (!this.model) return
+
+        this.mode = name
+
+        if (this.mode === 'eye') {
+            this.show()
+        }
+        else {
+            this.hide()
+        }
     }
 
     show()

@@ -160,49 +160,46 @@ export default class Astronaut
             })
     }
 
-    setMode(modeNumber)
+    setMode(name)
     {
-        if (!this.group || !this.model || !this.model.visible) return
+        if (!this.group || !this.model) return
         
-        this.mode = modeNumber
+        this.mode = name
+        this.hide()
 
-        if (this.mode === 1) 
+        if (this.mode === "travelling") 
         {
+            this.show()
             this.group.scale.set(0.5, 0.5, 0.5)
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, 0, 0)
-            
             this.animation.play('floating')
             this.model.position.set(-0.2, -2.6, 0)
         } 
-        else if (this.mode === 2) 
+        else if (this.mode === "falling") 
         {
+            this.show()
             this.group.scale.set(1, 1, 1)
             this.group.position.set(0, -0.5, 0)
             this.group.rotation.set(-Math.PI * 0.5, 0, -Math.PI * 0.5)
-            
             this.animation.play('idle')
             this.model.position.set(0, -1.6, 0)
         } 
-        else if (this.mode === 3) 
+        else if (this.mode === "closeup") 
         {
+            this.show()
             this.group.scale.set(1, 1, 1)
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-Math.PI * 0.2, Math.PI * 0.1, 0)
-
             this.animation.play('idle')
             this.model.position.set(0, -1.6, 0)
         }
-        else if (this.mode === 4) 
+        else if(this.mode === "far") 
         {
-            console.log("astronaut on scene 4")
-        } 
-        else if(this.mode === 5) 
-        {
+            this.show()
             this.group.scale.set(0.3, 0.3, 0.3)
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, 0, 0)
-            
             this.animation.play('floating')
             this.model.position.set(-0.2, -2.6, 0)
         }
@@ -225,13 +222,8 @@ export default class Astronaut
         const deltaTime = this.time.delta
         const elapsedTime = this.time.elapsed
 
-        // Group rotation
-        if (this.mode === 1) {
-            this.group.rotation.x += deltaTime * 0.001 * 0.05
-            this.group.rotation.y += deltaTime * 0.001 * 0.5
-            this.group.rotation.z += deltaTime * 0.001 * 0.5
-        } 
-        else if (this.mode === 5) {
+        // Group rotation (travelling & far share the same spin)
+        if (this.mode === 'travelling' || this.mode === 'far') {
             this.group.rotation.x += deltaTime * 0.001 * 0.05
             this.group.rotation.y += deltaTime * 0.001 * 0.5
             this.group.rotation.z += deltaTime * 0.001 * 0.5
@@ -239,10 +231,10 @@ export default class Astronaut
 
         // Cube camera positioning
         this.cubeCamera.position.copy(this.model.position)
-        if (this.mode === 1) {
+        if (this.mode === "travelling") {
             this.cubeCamera.position.y += 6
         } 
-        else if (this.mode === 2) {
+        else if (this.mode === "falling") {
             this.cubeCamera.position.y += 12 
             this.cubeCamera.position.x += 2
             this.cubeCamera.position.z -= 2 
