@@ -13,7 +13,7 @@ export default class Manager
         this.time = this.experience.time
         this.postProcessing = this.experience.postProcessing
 
-        this.order = ['travelling', 'falling', 'closeup', 'eye', 'far']
+        this.order = ['front', 'side', 'closeup', 'eye', 'far']
         
         this.currentScene = this.order[0]
         this.transitioning = false

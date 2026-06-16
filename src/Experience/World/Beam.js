@@ -11,7 +11,7 @@ export default class Beam
         this.debug = this.experience.debug
         this.sound = this.experience.sound
 
-        this.mode = "travelling"
+        this.mode = "front"
         
         this.setParameters()
         this.setGroup()
@@ -285,7 +285,7 @@ export default class Beam
     {
         this.mode = name
 
-        if (this.mode === "travelling") {
+        if (this.mode === "front") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, Math.PI, 0)
 
@@ -298,7 +298,7 @@ export default class Beam
             this.p.audioAmplitude = 3.5
             this.p.audioFreqStrength = 3.0
         } 
-        else if (this.mode === "falling") {
+        else if (this.mode === "side") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(1.6, 0, -1)
 

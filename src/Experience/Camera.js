@@ -16,18 +16,18 @@ export default class Camera
         this.debug = this.experience.debug
         this.sound = this.experience.sound
 
-        this.baseFov = 35       // Base fov
+        this.baseFov = 35                           // Base fov
         this.fovAmount = 60  
 
         this.target = new THREE.Vector3(0, 0, 0)    // Current look-at target
 
-        this.tl = null                  // Active GSAP timeline (null = static camera)
-        this.loop = false               // Does the current scene loop
-        this.onSceneEnd = null          // Called when a one-shot animation ends
-        this.animElapsed = 0            // Manual playhead, in seconds
-        this.animDone = false           // Guards a single onSceneEnd call
-        this.baseSpeed = 1.0            // Base animation speed
-        this.volumeSpeedFactor = 8.0    // Volume influence on speed
+        this.tl = null                              // Active GSAP timeline (null = static camera)
+        this.loop = false                           // Does the current scene loop
+        this.onSceneEnd = null                      // Called when a one-shot animation ends
+        this.animElapsed = 0                        // Manual playhead, in seconds
+        this.animDone = false                       // Guards a single onSceneEnd call
+        this.baseSpeed = 1.0                        // Base animation speed
+        this.volumeSpeedFactor = 8.0                // Volume influence on speed
 
         this.setInstance()
         this.setScenes()
@@ -91,30 +91,32 @@ export default class Camera
         targetFolder.add(this.target, 'y').min(-10).max(10).step(0.05).name('target y').listen()
         targetFolder.add(this.target, 'z').min(-10).max(10).step(0.05).name('target z').listen()
 
+        // Animation
+        const animationFolder = this.debugFolder.addFolder('animation')
+        animationFolder.close()
+        animationFolder.add(this, "baseSpeed").min(0).max(10).step(0.01)
+        animationFolder.add(this, "volumeSpeedFactor").min(0).max(10).step(0.01)
+
     }
 
     // Per-scene camera data: animation or static pose, plus loop flag
     setScenes()
     {
         this.scenes = {
-            // One-shot animation → its end triggers the next scene
-            travelling: {
+            front: {
                 loop: false,
                 build: () => gsap.timeline({ paused: true })
-                    .fromTo(this.instance.position, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 10, duration: 20, ease: 'none' })
+                    .fromTo(this.instance.position, { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 10, duration: 12, ease: 'none' })
                     .fromTo(this.target, { x: 0, y: 0, z: -10}, { x: 0, y: 0, z: 0, duration: 6 }, 0),
-                // loop: true,
-                // position: new THREE.Vector3(0, 0, 8),
-                // target: new THREE.Vector3(0, 0, 0),
             },
-            falling: {
+            side: {
                 loop: true,
                 build: () => {
                     const R = 6                             // Base radius
                     const amp = 4                           // Approach/recede amount
                     const breaths = 2                       // In-out cycles per orbit (keep it an INTEGER, see below)
                     const ampY = 2                          // Vertical amplitude
-                    const bob = -2                           // Up-down cycles per orbit (integer)
+                    const bob = -2                          // Up-down cycles per orbit (integer)
                     const proxy = { a: 0 }                  // Angle driver
                     return gsap.timeline({ paused: true })
                         .to(proxy, {
@@ -142,15 +144,15 @@ export default class Camera
             far: {
                 loop: true,
                 build: () => {
-                    const R = 8                             // Base radius
-                    const amp = 4                           // Approach/recede amount
-                    const breaths = 2                       // In-out cycles per orbit (keep it an INTEGER, see below)
-                    const proxy = { a: 0 }                  // Angle driver
+                    const R = 8
+                    const amp = 4
+                    const breaths = 2
+                    const proxy = { a: 0 }
                     return gsap.timeline({ paused: true })
                         .to(proxy, {
                             a: Math.PI * 2,
                             duration: 30,
-                            ease: 'none',                   // Constant angular speed
+                            ease: 'none',
                             onUpdate: () => {
                                 const r = R + Math.sin(proxy.a * breaths) * amp
                                 this.instance.position.set(r * Math.cos(proxy.a), 0, r * Math.sin(proxy.a))

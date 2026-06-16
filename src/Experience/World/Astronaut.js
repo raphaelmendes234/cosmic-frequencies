@@ -74,12 +74,6 @@ export default class Astronaut
             }
         })
 
-        const mesh = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshBasicMaterial({ color: "red", wireframe: true})
-        )
-        this.group.add(mesh)
-
         this.group.add(this.model)
         this.model.position.set(-0.2, -2.6, 0)  // Set with floating animation on (sketchfab model), so it was high
     }
@@ -167,7 +161,7 @@ export default class Astronaut
         this.mode = name
         this.hide()
 
-        if (this.mode === "travelling") 
+        if (this.mode === "front") 
         {
             this.show()
             this.group.scale.set(0.5, 0.5, 0.5)
@@ -176,7 +170,7 @@ export default class Astronaut
             this.animation.play('floating')
             this.model.position.set(-0.2, -2.6, 0)
         } 
-        else if (this.mode === "falling") 
+        else if (this.mode === "side") 
         {
             this.show()
             this.group.scale.set(1, 1, 1)
@@ -222,8 +216,8 @@ export default class Astronaut
         const deltaTime = this.time.delta
         const elapsedTime = this.time.elapsed
 
-        // Group rotation (travelling & far share the same spin)
-        if (this.mode === 'travelling' || this.mode === 'far') {
+        // Group rotation (front & far share the same spin)
+        if (this.mode === 'front' || this.mode === 'far') {
             this.group.rotation.x += deltaTime * 0.001 * 0.05
             this.group.rotation.y += deltaTime * 0.001 * 0.5
             this.group.rotation.z += deltaTime * 0.001 * 0.5
@@ -231,10 +225,10 @@ export default class Astronaut
 
         // Cube camera positioning
         this.cubeCamera.position.copy(this.model.position)
-        if (this.mode === "travelling") {
+        if (this.mode === "front") {
             this.cubeCamera.position.y += 6
         } 
-        else if (this.mode === "falling") {
+        else if (this.mode === "side") {
             this.cubeCamera.position.y += 12 
             this.cubeCamera.position.x += 2
             this.cubeCamera.position.z -= 2 

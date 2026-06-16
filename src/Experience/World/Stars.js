@@ -10,7 +10,7 @@ export default class Stars
         this.time = this.experience.time
         this.debug = this.experience.debug
 
-        this.mode = "travelling"
+        this.mode = "front"
         
         this.setParameters()
         this.setGroup()
@@ -190,11 +190,11 @@ export default class Stars
         this.mode = name
 
         // Group rotation matched to Beam's modes
-        if (this.mode === "travelling") {
+        if (this.mode === "front") {
             this.group.rotation.set(0, Math.PI, 0)
             this.p.size = 6.7
         } 
-        else if (this.mode === "falling") {
+        else if (this.mode === "side") {
             this.group.rotation.set(1.6, 0, -1)
             this.p.size = 3
         } 
