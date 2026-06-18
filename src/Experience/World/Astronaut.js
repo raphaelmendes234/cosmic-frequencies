@@ -56,7 +56,6 @@ export default class Astronaut
     setModel()
     {
         this.model = this.ressource.scene
-        this.scene.add(this.model)
 
         this.model.traverse((child) => 
         {
@@ -75,7 +74,7 @@ export default class Astronaut
         })
 
         this.group.add(this.model)
-        this.model.position.set(-0.2, -2.6, 0)  // Set with floating animation on (sketchfab model), so it was high
+        this.model.position.set(0, -1.6, 0)
     }
 
     setAnimation()
@@ -84,13 +83,14 @@ export default class Astronaut
         this.animation.mixer = new THREE.AnimationMixer(this.model)
         
         this.animation.actions = {}
-        
-        this.animation.actions.floating = this.animation.mixer.clipAction(this.ressource.animations[0])
-        this.animation.actions.idle = this.animation.mixer.clipAction(this.ressource.animations[1])
-        this.animation.actions.moonWalk = this.animation.mixer.clipAction(this.ressource.animations[2])
-        this.animation.actions.wave = this.animation.mixer.clipAction(this.ressource.animations[3])
 
-        this.animation.actions.current = this.animation.actions.floating
+        this.animation.actions.falling = this.animation.mixer.clipAction(this.ressource.animations[0])
+        this.animation.actions.floating = this.animation.mixer.clipAction(this.ressource.animations[1])
+        this.animation.actions.idle = this.animation.mixer.clipAction(this.ressource.animations[2])
+        this.animation.actions.moonWalk = this.animation.mixer.clipAction(this.ressource.animations[3])
+        this.animation.actions.wave = this.animation.mixer.clipAction(this.ressource.animations[4])
+
+        this.animation.actions.current = this.animation.actions.falling
         this.animation.actions.current.play()
         
         this.animation.play = (name) =>
@@ -109,11 +109,13 @@ export default class Astronaut
         if(this.debug.active)
         {
             const debugObject = {
+                playFalling: () => { this.animation.play('falling')},
                 playFloating: () => { this.animation.play('floating')},
                 playIdle: () => { this.animation.play('idle')},
                 playWave: () => { this.animation.play('wave')},
                 playMoonWalk: () => { this.animation.play('moonWalk')}
             }
+            this.debugFolder.add(debugObject, 'playFalling')
             this.debugFolder.add(debugObject, 'playFloating')
             this.debugFolder.add(debugObject, 'playIdle')
             this.debugFolder.add(debugObject, 'playWave')
@@ -167,8 +169,7 @@ export default class Astronaut
             this.group.scale.set(0.5, 0.5, 0.5)
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, 0, 0)
-            this.animation.play('floating')
-            this.model.position.set(-0.2, -2.6, 0)
+            this.animation.play('falling')
         } 
         else if (this.mode === "side") 
         {
@@ -176,8 +177,7 @@ export default class Astronaut
             this.group.scale.set(1, 1, 1)
             this.group.position.set(0, -0.5, 0)
             this.group.rotation.set(-Math.PI * 0.5, 0, -Math.PI * 0.5)
-            this.animation.play('idle')
-            this.model.position.set(0, -1.6, 0)
+            this.animation.play('falling')
         } 
         else if (this.mode === "closeup") 
         {
@@ -186,7 +186,6 @@ export default class Astronaut
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-Math.PI * 0.2, Math.PI * 0.1, 0)
             this.animation.play('idle')
-            this.model.position.set(0, -1.6, 0)
         }
         else if(this.mode === "far") 
         {
@@ -194,8 +193,7 @@ export default class Astronaut
             this.group.scale.set(0.3, 0.3, 0.3)
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, 0, 0)
-            this.animation.play('floating')
-            this.model.position.set(-0.2, -2.6, 0)
+            this.animation.play('falling')
         }
     }
 
