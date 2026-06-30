@@ -224,11 +224,12 @@ export default class Astronaut
         // Cube camera positioning
         this.cubeCamera.position.copy(this.model.position)
         if (this.mode === "front") {
-            this.cubeCamera.position.y += 6
+            this.cubeCamera.position.y += 4
+            
         } 
         else if (this.mode === "side") {
-            this.cubeCamera.position.y += 12 
             this.cubeCamera.position.x += 2
+            this.cubeCamera.position.y += 12 
             this.cubeCamera.position.z -= 2 
         }
             

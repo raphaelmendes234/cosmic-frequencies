@@ -349,7 +349,7 @@ export default class Beam
             this.group.position.set(0, 3, 0)
             this.group.rotation.set(-0.8, -0.5, 0.6)
 
-            this.mesh.count = 700
+            this.mesh.count = 500
 
             this.p.startDiameter = 0.1
             this.p.endDiameter = 0.1

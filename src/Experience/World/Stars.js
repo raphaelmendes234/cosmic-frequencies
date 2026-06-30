@@ -36,7 +36,7 @@ export default class Stars
         
         // Counts
         this.p.maxCount = 20000
-        this.p.count = 5000
+        this.p.count = 2000
 
         // Spawn area (cube from -limit to +limit)
         this.p.limit = 50.0 
