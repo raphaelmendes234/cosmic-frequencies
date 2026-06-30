@@ -83,7 +83,7 @@ export default class SpaceSky
 
                 float fbm(vec3 p){
                     float v = 0.0; float a = 0.5;
-                    for(int i = 0; i < 4; i++){ v += a * noise(p); p *= 2.0; a *= 0.5; }
+                    for(int i = 0; i < 3; i++){ v += a * noise(p); p *= 2.0; a *= 0.5; }   // 3 octaves: the 4th is hidden by the density threshold
                     return v;
                 }
 
@@ -92,8 +92,9 @@ export default class SpaceSky
                     vec3 p = dir * uScale;
                     float t = uTime * uSpeed;
 
-                    // Domain warp → undulating swirls
-                    vec3 warp = vec3(fbm(p + t), fbm(p + t + 4.7), fbm(p + t + 9.2));
+                    // Domain warp → undulating swirls (2 fbm; the third component reuses the first)
+                    vec2 w = vec2(fbm(p + t), fbm(p + t + 4.7));
+                    vec3 warp = vec3(w, w.x);
                     float n = fbm(p + warp * uWarp + t * 0.5);
 
                     n = smoothstep(uThreshold, uThreshold + uSoftness, n);      // Density

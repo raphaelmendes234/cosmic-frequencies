@@ -12,7 +12,6 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 
 // Shaders
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
-import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js'
 
 export default class PostProcessing
 {
@@ -56,11 +55,12 @@ export default class PostProcessing
 
         // Passes
         this.setUnrealBloomPass()
+
+        // CRT + B&W + gamma correction merged into a single full-screen pass
+        // (one framebuffer read/write instead of three)
         this.setCRTPass()
-        this.setBlackWhitePass()
 
         // Corrections passes
-        this.setGammaCorrectionPass()
         this.setSMAAPass()
     }
 
@@ -128,7 +128,10 @@ export default class PostProcessing
                 uAberration: { value: 0.05 },
                 uGrain: { value: 0.0 },
                 uTime: { value: 0 },
-                uTransition: { value: 1 }
+                uTransition: { value: 1 },
+                // Folded-in B&W pass
+                uBW: { value: 0 },                      // 0 = normal, 1 = black & white
+                uContrast: { value: this.contrast }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -146,6 +149,8 @@ export default class PostProcessing
                 uniform float uGrain;
                 uniform float uTime;
                 uniform float uTransition;
+                uniform float uBW;
+                uniform float uContrast;
                 varying vec2 vUv;
 
                 float rand(vec2 co){
@@ -163,6 +168,15 @@ export default class PostProcessing
                     vec2 offset = abs(uv.yx) / uCurvature;
                     uv = uv + uv * offset * offset;         // Bulge the image (tube)
                     return uv * 0.5 + 0.5;
+                }
+
+                // Linear -> sRGB, identical to the former GammaCorrectionShader pass
+                vec3 linearToSRGB(vec3 c){
+                    return mix(
+                        pow(c, vec3(0.41666)) * 1.055 - 0.055,
+                        c * 12.92,
+                        vec3(lessThanEqual(c, vec3(0.0031308)))
+                    );
                 }
 
                 void main(){
@@ -199,6 +213,14 @@ export default class PostProcessing
                     vec2 edge = smoothstep(0.0, uBorder, uv) * (1.0 - smoothstep(1.0 - uBorder, 1.0, uv));
                     color.rgb *= edge.x * edge.y;
 
+                    // --- Black & white (folded from the former B&W pass) ---
+                    float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));         // Luminance
+                    gray = clamp((gray - 0.5) * uContrast + 0.5, 0.0, 1.0);         // Punch: push away from mid-gray
+                    color.rgb = mix(color.rgb, vec3(gray), uBW);
+
+                    // --- Gamma / sRGB correction (folded from GammaCorrectionShader) ---
+                    color.rgb = linearToSRGB(color.rgb);
+
                     gl_FragColor = color;
                 }
             `,
@@ -216,45 +238,6 @@ export default class PostProcessing
             f.add(this, "aberrationStrength").min(0).max(0.1).step(0.001).name("aberration")
             f.add(this.crtPass.material.uniforms.uGrain, "value").min(0).max(10).step(0.005).name("grain")
         }
-    }
-
-    setBlackWhitePass() {
-        const BlackWhitePass = {
-            uniforms: {
-                tDiffuse: { value: null },
-                uBW: { value: 0 },                      // 0 = normal, 1 = black & white
-                uContrast: { value: this.contrast }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main(){
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform sampler2D tDiffuse;
-                uniform float uBW;
-                uniform float uContrast;
-                varying vec2 vUv;
-                void main(){
-                    vec4 c = texture2D(tDiffuse, vUv);
-                    float gray = dot(c.rgb, vec3(0.299, 0.587, 0.114));         // Luminance
-                    gray = clamp((gray - 0.5) * uContrast + 0.5, 0.0, 1.0);     // Punch: push away from mid-gray
-                    c.rgb = mix(c.rgb, vec3(gray), uBW);
-                    gl_FragColor = c;
-                }
-            `,
-        }
-        this.bwPass = new ShaderPass(BlackWhitePass)
-        this.bwPass.enabled = true
-        this.effectComposer.addPass(this.bwPass)
-    }
-
-    setGammaCorrectionPass() {
-        this.gammaCorrectionPass = new ShaderPass(GammaCorrectionShader)
-        this.gammaCorrectionPass.enabled = true
-        this.effectComposer.addPass(this.gammaCorrectionPass)
     }
 
     setSMAAPass() {
@@ -313,7 +296,7 @@ export default class PostProcessing
                 this.bwTimer = 0
             }
         }
-        this.bwPass.material.uniforms.uBW.value = this.bw
+        this.crtPass.material.uniforms.uBW.value = this.bw
 
         /**
          * Bloom
