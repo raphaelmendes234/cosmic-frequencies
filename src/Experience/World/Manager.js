@@ -18,8 +18,8 @@ export default class Manager
         this.currentScene = this.order[0]
         this.transitioning = false
         this.auto = true                // Auto switching enabled
-        this.minDuration = 6            // Duration when loud (fast cuts)
-        this.maxDuration = 10           // Duration when quiet (slow cuts)
+        this.minDuration = 4            // Duration when loud (fast cuts)
+        this.maxDuration = 8           // Duration when quiet (slow cuts)
         this.volumeBoost = 3            // Amplifies volume (volumeAverageSmooth stays low)
         this.autoTimer = 0
 
@@ -64,6 +64,9 @@ export default class Manager
             if (this.sceneController) this.sceneController.updateDisplay()  // Keep the GUI in sync
             this.transitioning = false
         })
+
+        // check if scene "far" for bloom boost
+        this.postProcessing.setBloom(this.currentScene)
     }
 
     // Trivial fan-out: every object configures itself from the scene name

@@ -289,6 +289,8 @@ export default class Beam
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(0, Math.PI, 0)
 
+            this.mesh.count = 300
+
             this.p.startDiameter = 30.0
             this.p.endDiameter = 0.1
             this.p.curvature = -4.0
@@ -301,6 +303,8 @@ export default class Beam
         else if (this.mode === "side") {
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(1.6, 0, -1)
+            
+            this.mesh.count = 300
 
             this.p.startDiameter = 0.1
             this.p.endDiameter = 0.1
@@ -315,6 +319,8 @@ export default class Beam
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-0.5, 0, 0)
 
+            this.mesh.count = 300
+
             this.p.startDiameter = 0.1
             this.p.endDiameter = 0.1
             this.p.curvature = 8.0
@@ -328,6 +334,8 @@ export default class Beam
             this.group.position.set(0, 0, 0)
             this.group.rotation.set(-Math.PI * 0.5, 0, 0)
 
+            this.mesh.count = 300
+
             this.p.startDiameter = 20.0
             this.p.endDiameter = 20.0
             this.p.curvature = 0.0
@@ -340,6 +348,8 @@ export default class Beam
         else if (this.mode === "far") {
             this.group.position.set(0, 3, 0)
             this.group.rotation.set(-0.8, -0.5, 0.6)
+
+            this.mesh.count = 700
 
             this.p.startDiameter = 0.1
             this.p.endDiameter = 0.1

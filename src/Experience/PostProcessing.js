@@ -102,6 +102,14 @@ export default class PostProcessing
         }
     }
 
+    setBloom(scene) {
+        if (scene === "far") {
+            this.unrealBloomPass.strength = 1.0
+        } else {
+            this.unrealBloomPass.strength = 0.3
+        }
+    }
+
     triggerTransition(onPeak)
     {
         // Start a full cut: close then reopen
@@ -278,7 +286,7 @@ export default class PostProcessing
             this.t += dt / this.transitionDuration
             const x = Math.min(this.t, 1)
             this.transition = 1 - Math.abs(x * 2 - 1)           // Triangle curve: peak at midpoint
-            
+
             // At midpoint (screen closed), trigger the switch once
             if (!this.peakFired && x >= 0.5) { this.peakFired = true; if (this.onPeak) this.onPeak() }
             if (this.t >= 1) this.phase = 'idle'
@@ -305,8 +313,16 @@ export default class PostProcessing
                 this.bwTimer = 0
             }
         }
-
         this.bwPass.material.uniforms.uBW.value = this.bw
+
+        /**
+         * Bloom
+         */
+        // if(currentScene === "far"){
+        //     this.unrealBloomPass.strength = 1.0
+        // } else {
+        //     this.unrealBloomPass.strength = 0.3
+        // }
 
         this.effectComposer.render()
     }
